@@ -242,20 +242,23 @@ async function getDidConfiguration(credential) {
   }
   
   return {
-    '@context': [
-      'https://www.w3.org/2018/credentials/v1',
-      'https://identity.foundation/.well-known/did-configuration/v1',
-    ],
-    issuer,
-    issuanceDate,
-    expirationDate,
-    type: [
-      'VerifiableCredential',
-      'DomainLinkageCredential',
-      'KiltCredential2020',
-    ],
-    credentialSubject,
-    proof,
+    "@context": "https://identity.foundation/.well-known/did-configuration/v1",
+    linked_dids: [{
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        'https://identity.foundation/.well-known/did-configuration/v1',
+      ],
+      issuer,
+      issuanceDate,
+      expirationDate,
+      type: [
+        'VerifiableCredential',
+        'DomainLinkageCredential',
+        'KiltCredential2020',
+      ],
+      credentialSubject,
+      proof,
+    }]
   }
 }
 
