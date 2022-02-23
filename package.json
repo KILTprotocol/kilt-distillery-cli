@@ -1,0 +1,22 @@
+{
+  "name": "kilt-cli",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@kiltprotocol/sdk-js": "0.25.3",
+    "@polkadot/util-crypto": "8.2.2",
+    "chalk": "^5.0.0",
+    "inquirer": "^8.2.0",
+    "valid-url": "^1.0.9"
+  },
+  "resolutions": {
+    "@polkadot/keyring": "8.2.2",
+    "@polkadot/networks": "8.2.2",
+    "@polkadot/types": "6.12.1",
+    "@polkadot/ui-shared": "1.1.1",
+    "@polkadot/util": "8.2.2",
+    "@polkadot/util-crypto": "8.2.2"
+  }
+}
