@@ -23,7 +23,7 @@ export default async function() {
   const encryptionKey = await getEncryptionKey(didDoc)
   const credential = await getDomainLinkCredential(keypairs, didDoc, origin)
   const didConfig = await getDidConfiguration(credential)
-  const dotenv = await getEnvironmentVariables(network, mnemonic, account, didDoc)
+  const dotenv = await getEnvironmentVariables(network, mnemonic, account, didDoc, origin)
   await createAssets(dotenv, didConfig, encryptionKey)
   await status(`Done! Assets saved to /verifier-assets\n${chalk.reset.gray('... press any key to return to main menu')}`, { keyPress: true })
   return mainMenu()
@@ -259,10 +259,11 @@ async function getDidConfiguration(credential) {
   }
 }
 
-async function getEnvironmentVariables(network, mnemonic, account, didDoc) {
+async function getEnvironmentVariables(network, mnemonic, account, didDoc, origin) {
   await status('Building environment variables...')
   let dotenv = ''
-  dotenv += `WS_ADDRESS=${network}\n`
+  dotenv += `ORIGIN=${origin}\n`
+  dotenv += `WSS_ADDRESS=${network}\n`
   dotenv += `VERIFIER_MNEMONIC=${mnemonic}\n`
   dotenv += `VERIFIER_ADDRESS=${account.address}\n`
   dotenv += `VERIFIER_DID=${didDoc.details.didUri}`
