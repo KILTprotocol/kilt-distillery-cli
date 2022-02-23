@@ -19,7 +19,7 @@
     "@polkadot/util-crypto": "8.2.2"
   },
   "bin": {  
-    "kilt": "./index.js"  
+    "kilt": "./bin/index.js"  
   },
   "author": "Paul Pomerleau"
 }
