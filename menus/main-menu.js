@@ -17,8 +17,8 @@ export default async function () {
     name: 'action',
     message: 'select action',
     choices: [
-      { name: 'setup verifier', value: 'setupVerifier' },
-      { name: 'create project', value: 'createProject' },
+      { name: 'setup verifier assets', value: 'setupVerifier' },
+      { name: 'create project from recipe', value: 'createProject' },
       { name: 'exit', value: 'exit' },
     ],
   })

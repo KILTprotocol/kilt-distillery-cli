@@ -8,11 +8,13 @@ import { prompt, status } from './_utilities.js'
 // excite grace cradle merge energy they excuse rifle blanket rose dose same
 export default async function() {
   const network = await getNetwork()
-  const mnemonic = network === 'mainnet' ? 
-    await getMnemonic() :
+  const testnet = network.indexOf('peregrin') > -1
+  
+  const mnemonic = testnet ? 
     await useExisting() ? 
+    await getMnemonic() : 
     await mnemonicGenerate() :
-    null
+    await getMnemonic()
 
   const origin = await getOrigin()
   await connect(network)
