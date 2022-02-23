@@ -5,7 +5,6 @@ import fs from 'fs'
 import mainMenu from './main-menu.js'
 import { prompt, status } from './_utilities.js'
 
-// excite grace cradle merge energy they excuse rifle blanket rose dose same
 export default async function() {
   const network = await getNetwork()
   const testnet = network.indexOf('peregrin') > -1
