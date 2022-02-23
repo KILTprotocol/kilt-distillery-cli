@@ -1,5 +1,5 @@
 {
-  "name": "kilt-cli",
+  "name": "kilt-distillery-cli",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
