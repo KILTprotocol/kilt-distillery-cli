@@ -270,7 +270,7 @@ async function getEnvironmentVariables(network, mnemonic, account, didDoc, origi
   return dotenv
 }
 
-async function createAssets(dotenv, encryptionKey, didConfig) {
+async function createAssets(dotenv, didConfig, encryptionKey) {
   await status('Generating Verifier assets...')
   const directory = `${process.cwd()}/verifier-assets`
   fs.rmSync(directory, { recursive: true, force: true })
