@@ -11,7 +11,7 @@ export default async function() {
   const mnemonic = network === 'mainnet' ? 
     await getMnemonic() :
     await useExisting() ? 
-    await getMnemonic() :
+    await mnemonicGenerate() :
     null
 
   const origin = await getOrigin()
