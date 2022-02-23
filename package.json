@@ -2,7 +2,6 @@
   "name": "kilt-cli",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT",
   "type": "module",
   "dependencies": {
     "@kiltprotocol/sdk-js": "0.25.3",
@@ -18,5 +17,9 @@
     "@polkadot/ui-shared": "1.1.1",
     "@polkadot/util": "8.2.2",
     "@polkadot/util-crypto": "8.2.2"
-  }
+  },
+  "bin": {  
+    "kilt": "./index.js"  
+  },
+  "author": "Paul Pomerleau"
 }
