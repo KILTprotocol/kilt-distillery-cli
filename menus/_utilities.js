@@ -5,7 +5,7 @@ export async function status(msg, opts = {}) {
   return new Promise(async resolve => {
     const { wait = 500, keyPress = false } = opts
     console.clear()
-    console.log(chalk.bold(` KILT CLI - ${chalk.reset(msg)}`))
+    console.log(chalk.bold(` KILT DISTILLERY CLI - ${chalk.reset(msg)}`))
     if (!keyPress) return setTimeout(resolve, wait)
     process.stdin.setRawMode(true)
     process.stdin.resume()
