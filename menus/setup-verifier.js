@@ -86,10 +86,7 @@ async function loadAccount(seed) {
   })
 
   const mnemonic = seed || mnemonicGenerate()
-  const account = keyring.addFromMnemonic(
-    mnemonic,
-    { signingKeyPairType }
-  )
+  const account = keyring.addFromUri(mnemonic);
   return account
 }
 
@@ -116,7 +113,7 @@ async function getKeypairs(account, mnemonic) {
     relationships: {
       [KeyRelationship.authentication]: keypairs.authentication,
       [KeyRelationship.assertionMethod]: keypairs.assertion,
-      [KeyRelationship.keyAgreement]: { ...keypairs.keyAgreement, type: 'x25519' },
+      [KeyRelationship.keyAgreement]: keypairs.keyAgreement,
     }
   }
 }
@@ -269,7 +266,7 @@ async function getEnvironmentVariables(network, mnemonic, account, didDoc, origi
   dotenv += `WSS_ADDRESS=${network}\n`
   dotenv += `VERIFIER_MNEMONIC=${mnemonic}\n`
   dotenv += `VERIFIER_ADDRESS=${account.address}\n`
-  dotenv += `VERIFIER_DID=${didDoc.details.didUri}`
+  dotenv += `VERIFIER_DID_URI=${didDoc.details.didUri}`
   return dotenv
 }
 
