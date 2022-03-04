@@ -64,13 +64,14 @@ export function randomChallenge() {
   return randomAsHex(16)
 }
 
-export async function isSignatureValid({ input, output }) {
+export async function getDidFromValidSignature({ input, output }) {
   // configure KILT address from .env and connect
   await cryptoWaitReady()
   await init({ address: process.env.WSS_ADDRESS })
 
   // resolve the client's did document
-  const didDocument = await Did.DefaultResolver.resolveDoc(output.did);
+  const didUri = output.didKeyUri.split('#').shift()
+  const didDocument = await Did.DefaultResolver.resolveDoc(didUri);
   if (!didDocument) {
     throw new Error('Could not resolve DID');
   }
@@ -90,5 +91,5 @@ export async function isSignatureValid({ input, output }) {
   // disconnect 
   await disconnect()
 
-  return isValid
+  return isValid ? didUri : null
 }

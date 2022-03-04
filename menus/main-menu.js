@@ -1,27 +1,16 @@
-import { prompt } from './_utilities.js'
 import setupVerifier from './setup-verifier.js'
 import createProject from './create-project.js'
+import exitCLI from './exit-cli.js'
+import { mainMenu } from './_prompts.js'
 
 const menus = {
-  exit: () => { 
-    console.clear() 
-    process.exit() 
-  },
+  exitCLI,
   createProject,
   setupVerifier,
 }
 
 export default async function () {
-  const { action } = await prompt({
-    type: 'list',
-    name: 'action',
-    message: 'select action',
-    choices: [
-      { name: 'setup verifier assets', value: 'setupVerifier' },
-      { name: 'create project from recipe', value: 'createProject' },
-      { name: 'exit', value: 'exit' },
-    ],
-  })
-
+  const action = await mainMenu()
+  console.log(action)
   menus[action]()
 }

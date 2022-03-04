@@ -1,5 +1,5 @@
 
-import { clearCookie, isSignatureValid, createJWT, setCookie, randomChallenge, getCookieData } from '../../utils/api';
+import { clearCookie, getDidFromValidSignature, createJWT, setCookie, randomChallenge, getCookieData } from '../../utils/api';
 
 const handlers = {
   GET(req, res) {  
@@ -20,15 +20,14 @@ const handlers = {
     const input = getCookieData({ name: 'challenge', cookie })
 
     // get the validity state of the signature attempt
-    const valid = await isSignatureValid({ input, output })
+    const did = await getDidFromValidSignature({ input, output })
 
-    if (!valid) {
+    if (!did) {
       // if invalid clear httpOnly cookie & send 401
       clearCookie(res, { name: 'token'})
       res.status(401).send('')
     } else {
       // if valid create JWT from DID, set httpOnly cookie, return 200 with DID
-      const { did } = output
       const token = createJWT(did)
       setCookie(res, { name: 'token', data: token })
       res.status(200).send(did)

@@ -1,13 +1,13 @@
 import { Attestation, BlockchainUtils, Credential, Claim, RequestForAttestation, CType, Utils, Did, KeyRelationship, init, Balance } from '@kiltprotocol/sdk-js'
-import { mnemonicGenerate, mnemonicValidate, cryptoWaitReady, naclBoxPairFromSecret, sr25519PairFromSeed, mnemonicToMiniSecret, keyExtractPath, keyFromPath, blake2AsU8a } from '@polkadot/util-crypto'
+import { mnemonicGenerate, cryptoWaitReady, naclBoxPairFromSecret, sr25519PairFromSeed, mnemonicToMiniSecret, keyExtractPath, keyFromPath, blake2AsU8a } from '@polkadot/util-crypto'
+import { getMnemonic, useExisting, getNetwork, getOrigin, status } from "./_prompts.js"
 import chalk from 'chalk'
 import fs from 'fs'
 import mainMenu from './main-menu.js'
-import { prompt, status } from './_utilities.js'
 
 export default async function() {
   const network = await getNetwork()
-  const testnet = network.indexOf('peregrin') > -1
+  const testnet = network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
   
   const mnemonic = testnet ? 
     await useExisting() ? 
@@ -27,48 +27,6 @@ export default async function() {
   await createAssets(dotenv, didConfig, encryptionKey)
   await status(`Done! Assets saved to /verifier-assets\n${chalk.reset.gray('... press any key to return to main menu')}`, { keyPress: true })
   return mainMenu()
-}
-
-async function getMnemonic() {
-  return (await prompt({
-    type: 'input',
-    name: 'mnemonic',
-    message: `enter mnemonic\n${chalk.cyan('❯')}`,
-    validate: mnemonic => mnemonicValidate(mnemonic) || 'invalid mnemonic',
-  })).mnemonic
-}
-
-async function useExisting() {
-  return (await prompt({
-    type: 'list',
-    name: 'method',
-    message: 'mnemonic',
-    choices: [
-      { name: 'use an existing mnemonic', value: 'existing' },
-      { name: 'generate a new mnemonic', value: 'generate' },
-    ]
-  })).method === 'existing'
-}
-
-async function getNetwork() {
-  return (await prompt({
-    type: 'list',
-    name: 'network',
-    message: 'select network',
-    choices: [
-      { name: 'testnet', value: 'wss://peregrine.kilt.io/parachain-public-ws' },
-      { name: 'mainnet', value: 'wss://spiritnet.api.onfinality.io/public-ws' },
-    ]
-  })).network
-}
-
-async function getOrigin() {
-  return (await prompt({
-    type: 'input',
-    name: 'origin',
-    message: `enter origin ${chalk.reset.gray('(https://example.com || http://localhost:3000)')}\n${chalk.cyan('❯')}`,
-    validate: origin => (origin.startsWith('http://localhost:') || validUrl.isUri(origin)) || 'invalid origin',
-  })).origin
 }
 
 async function connect(network) {

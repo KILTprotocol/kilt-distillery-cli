@@ -23,6 +23,6 @@ var walk = function(dir, project) {
   return results;
 }
 
-export default {
-  'nextjs-did-login': walk(__dirname + '/nextjs-did-login', '/nextjs-did-login')
-}
+export const nextJsDidLogin = walk(__dirname + '/nextjs-sporran-did-login', '/nextjs-sporran-did-login')
+
+export const nextJsCredentialLogin = walk(__dirname + '/nextjs-sporran-did-login', '/nextjs-sporran-did-login')
