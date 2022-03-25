@@ -23,7 +23,7 @@ export default async function () {
     fs.ensureFileSync(`${process.cwd()}/${dappName}/${file.path}`)
     fs.writeFileSync(`${process.cwd()}/${dappName}/${file.path}`, file.code)
   })
-  fs.writeFileSync(`${process.cwd()}/.env`, dotenv)
+  fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
 
   status('initializing project...')
   process.chdir(dappName)
