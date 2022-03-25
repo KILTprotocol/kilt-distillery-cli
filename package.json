@@ -22,7 +22,22 @@
     "@polkadot/util-crypto": "8.2.2"
   },
   "bin": {
-    "kilt-distillery-cli": "./index.js"
+    "kilt-distillery-cli": "index.js"
   },
-  "author": "Paul Pomerleau"
+  "author": "Paul Pomerleau",
+  "description": "CLI tool to help devs quickly accomplish commons tasks and get started with project recipes",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KILTprotocol/kilt-distillery-cli.git"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KILTprotocol/kilt-distillery-cli/issues"
+  },
+  "homepage": "https://github.com/KILTprotocol/kilt-distillery-cli#readme"
 }
