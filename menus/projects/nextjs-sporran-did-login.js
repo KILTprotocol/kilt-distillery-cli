@@ -1,5 +1,5 @@
 import { randomAsHex } from "@polkadot/util-crypto"
-import { getJWTExpiry, getJWTRenewal, getNetwork, status } from "../_prompts.js"
+import { getDappName, getJWTExpiry, getJWTRenewal, getNetwork, status } from "../_prompts.js"
 import fs from "fs-extra"
 import { exec } from "child_process"
 import { nextJsDidLogin } from "../../recipes/index.js"
@@ -7,6 +7,7 @@ import { nextJsDidLogin } from "../../recipes/index.js"
 export default async function () {
   const network = await getNetwork()
   await status('...generating JWT secret')
+  const dappName = await getDappName()
   const jwtSecret = randomAsHex(16)
   const expiry = await getJWTExpiry()
   const renew = await getJWTRenewal()
