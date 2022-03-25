@@ -5,7 +5,14 @@ import chalk from 'chalk'
 import fs from 'fs'
 import mainMenu from './main-menu.js'
 
-export default async function() {
+/**
+ * setup verifier results in
+ * - encryptionKey 
+ * - didConfiguration 
+ * - verifier mnemonic 
+ */
+
+export default async function({ returnAssets = false }) {
   const network = await getNetwork()
   const testnet = network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
   
@@ -20,11 +27,21 @@ export default async function() {
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
   const didDoc = await getDidDoc(account, keypairs, network)
-  const encryptionKey = await getEncryptionKey(didDoc)
   const credential = await getDomainLinkCredential(keypairs, didDoc, origin)
   const didConfig = await getDidConfiguration(credential)
   const dotenv = await getEnvironmentVariables(network, mnemonic, account, didDoc, origin)
-  await createAssets(dotenv, didConfig, encryptionKey)
+  
+  if (returnAssets) return { 
+    network,
+    origin,
+    mnemonic,
+    address: account.address,
+    didUri: didDoc.details.did,
+    dotenv, 
+    didConfig
+  }
+
+  await saveAssets(dotenv, didConfig)
   await status(`Done! Assets saved to /verifier-assets\n${chalk.reset.gray('... press any key to return to main menu')}`, { keyPress: true })
   return mainMenu()
 }
@@ -105,11 +122,6 @@ async function getDidDoc(account, keypairs, network) {
   await BlockchainUtils.signAndSubmitTx(extrinsic, account, { resolveOn })
   await status('DID created on chain...')
   return await Did.DefaultResolver.resolveDoc(did)
-}
-
-async function getEncryptionKey(didDoc) {
-  await status('Getting encryption key json...')
-  return didDoc.details.getKeys('keyAgreement').pop()
 }
 
 async function getDomainLinkCredential(keypairs, didDoc, origin) {
@@ -228,13 +240,12 @@ async function getEnvironmentVariables(network, mnemonic, account, didDoc, origi
   return dotenv
 }
 
-async function createAssets(dotenv, didConfig, encryptionKey) {
+async function saveAssets(dotenv, didConfig) {
   await status('Generating Verifier assets...')
   const directory = `${process.cwd()}/verifier-assets`
   fs.rmSync(directory, { recursive: true, force: true })
   fs.mkdirSync(directory)
   fs.writeFileSync(`${directory}/.env`, dotenv, 'utf-8')
   fs.writeFileSync(`${directory}/didConfiguration.json`, JSON.stringify(didConfig, null, 2), 'utf-8')
-  fs.writeFileSync(`${directory}/encryptionKey.json`, JSON.stringify(encryptionKey, null, 2), 'utf-8')
   return true
 }

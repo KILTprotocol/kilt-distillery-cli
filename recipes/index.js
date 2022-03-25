@@ -25,4 +25,4 @@ var walk = function(dir, project) {
 
 export const nextJsDidLogin = walk(__dirname + '/nextjs-sporran-did-login', '/nextjs-sporran-did-login')
 
-export const nextJsCredentialLogin = walk(__dirname + '/nextjs-sporran-did-login', '/nextjs-sporran-did-login')
+export const nextJsCredentialLogin = walk(__dirname + '/nextjs-sporran-credential-login', '/nextjs-sporran-credential-login')

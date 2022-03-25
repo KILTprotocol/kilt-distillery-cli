@@ -110,3 +110,11 @@ export async function getJWTRenewal() {
     ]
   })).renew === 'true'
 }
+
+export async function getDappName() {
+  return (await prompt({
+    type: 'input',
+    name: 'dappName',
+    message: "what's the dapp's name?"
+  })).dappName
+}
