@@ -32,13 +32,14 @@ export default async function () {
 
   status('creating files...')
   nextJsCredentialLogin.forEach(file => {
-    fs.ensureFileSync(`${process.cwd()}/${file.path}`)
-    fs.writeFileSync(`${process.cwd()}/${file.path}`, file.code)
+    fs.ensureFileSync(`${process.cwd()}/${dappName}/${file.path}`)
+    fs.writeFileSync(`${process.cwd()}/${dappName}/${file.path}`, file.code)
   })
-  fs.writeFileSync(`${process.cwd()}/.env`, dotenv)
-  fs.writeFileSync(`${process.cwd()}/public/didConfiguration.json`, JSON.stringify(didConfig, null, 2))
+  fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
+  fs.writeFileSync(`${process.cwd()}/${dappName}/public/didConfiguration.json`, JSON.stringify(didConfig, null, 2))
   
   status('initializing project...')
+  process.chdir(dappName)
   exec("npm init -y", () => {
     status('installing dependencies...')
     exec('npm install', () => {
@@ -50,5 +51,3 @@ export default async function () {
     })
   })
 }
-
-// have ball hamster month crisp retire away runway abstract close hybrid exhaust
