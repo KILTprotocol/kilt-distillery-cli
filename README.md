@@ -7,4 +7,5 @@ clone the repo and open terminal
 
 ## run
 from the terminal  
-`kilt`  
+`kilt-distillery-cli`  
+
