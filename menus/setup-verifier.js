@@ -12,7 +12,7 @@ import mainMenu from './main-menu.js'
  * - verifier mnemonic 
  */
 
-export default async function({ returnAssets = false }) {
+export default async function({ returnAssets = false } = {}) {
   const network = await getNetwork()
   const testnet = network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
   
