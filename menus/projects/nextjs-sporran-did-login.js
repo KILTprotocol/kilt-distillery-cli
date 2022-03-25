@@ -19,12 +19,13 @@ export default async function () {
 
   status('creating files...')
   nextJsDidLogin.forEach(file => {
-    fs.ensureFileSync(`${process.cwd()}/${file.path}`)
-    fs.writeFileSync(`${process.cwd()}/${file.path}`, file.code)
+    fs.ensureFileSync(`${process.cwd()}/${dappName}/${file.path}`)
+    fs.writeFileSync(`${process.cwd()}/${dappName}/${file.path}`, file.code)
   })
   fs.writeFileSync(`${process.cwd()}/.env`, dotenv)
 
   status('initializing project...')
+  process.chdir(dappName)
   exec("yarn init -y", () => {
     status('installing dependencies...')
     exec('yarn install', () => {
