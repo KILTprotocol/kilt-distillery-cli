@@ -274,7 +274,7 @@ export async function attestClaim(claims, fullDid, account, keypairs) {
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
   const batchTx = await Promise.all(
-    claims.map(async (claim) => {
+    claims.map(async ({ ctype, claim }) => {
       const request = RequestForAttestation.fromClaim(claim)
 
       await request.signWithDidKey(
@@ -325,8 +325,8 @@ export async function attestClaim(claims, fullDid, account, keypairs) {
     })
   }
 
-  const credential = await Promise.all(
-    claims.map(async (claim) => {
+  const credentials = await Promise.all(
+    claims.map(async ({ ctype, claim }) => {
       const request = RequestForAttestation.fromClaim(claim)
 
       await request.signWithDidKey(
@@ -347,12 +347,20 @@ export async function attestClaim(claims, fullDid, account, keypairs) {
         request,
         fullDid.details.did
       )
-      return Credential.fromRequestAndAttestation(request, attestation)
+
+      const cred = Credential.fromRequestAndAttestation(request, attestation)
+
+      return {
+        attester: "TestSocialKYC",
+        cTypeTitle: ctype,
+        isDownloaded: true,
+        name: ctype,
+        ...cred
+      }
     })
   )
-  console.log(credential)
 
-  return Object.assign({}, credential)
+  return credentials
 }
 // to do: give each credential the correct name
 // Make the objects similar to the sporran object
@@ -360,11 +368,13 @@ function saveAssets(credentials) {
   const directory = `${process.cwd()}/claimer-credentials`
   fs.rmSync(directory, { recursive: true, force: true })
   fs.mkdirSync(directory)
-  fs.writeFileSync(
-    `${directory}/credentials.json`,
-    JSON.stringify(credentials, null, 2),
-    'utf-8'
-  )
+  credentials.forEach(credential => {
+    fs.writeFileSync(
+      `${directory}/${credential.name}.json`,
+      JSON.stringify(credential, null, 2),
+      'utf-8'
+    )
+  })
 }
 
 export default async function () {
@@ -407,15 +417,24 @@ export default async function () {
     discordClaimContents,
     didDoc.details.did
   )
-  const credential = await attestClaim(
-    [githubClaim, twitchClaim, twitterClaim, emailClaim, discordClaim],
+
+  const claims = [
+    { ctype: 'test github', claim: githubClaim },
+    { ctype: 'test twitch', claim: twitchClaim },
+    { ctype: 'test twitter', claim: twitterClaim },
+    { ctype: 'test email', claim: emailClaim },
+    { ctype: 'test discord', claim: discordClaim },
+  ]
+
+  const credentials = await attestClaim(
+    claims,
     didDoc,
     account,
     keypairs
   )
 
   await status('Generating claimer credentials assets...')
-  saveAssets(credential)
+  saveAssets(credentials)
 
   await status(
     `Done! Assets saved to /claimer-assets\n${chalk.reset.gray(
