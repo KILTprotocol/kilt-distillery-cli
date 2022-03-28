@@ -29,6 +29,7 @@ export async function mainMenu() {
     message: 'select action',
     choices: [
       { name: 'setup verifier assets', value: 'setupVerifier' },
+      { name: 'setup claimer socialKYC credential', value: 'setupClaimer' },
       { name: 'create project from recipe', value: 'createProject' },
       { name: 'exit', value: 'exitCLI' },
     ],

@@ -7,26 +7,31 @@ import {
   Did,
   Balance,
   init,
-  CTypeUtils,
   Utils,
   KeyRelationship,
   BlockchainUtils,
+  ChainHelpers,
+  VerificationKeyType,
+  EncryptionKeyType,
 } from '@kiltprotocol/sdk-js'
-import chalk from 'chalk'
 import {
-  cryptoWaitReady,
   naclBoxPairFromSecret,
   sr25519PairFromSeed,
   mnemonicToMiniSecret,
   keyExtractPath,
   keyFromPath,
   blake2AsU8a,
+  encodeAddress,
 } from '@polkadot/util-crypto'
-import { getMnemonic, status } from './_prompts.js'
-const Attester = {}
+import { getMnemonic, status, mainMenu } from './_prompts.js'
+
+import chalk from 'chalk'
+import fs from 'fs'
+
+const resolveOn = BlockchainUtils.IS_FINALIZED
+
 async function connect() {
   await status('connecting to network...')
-  await cryptoWaitReady()
   await init({ address: 'wss://peregrine.kilt.io/parachain-public-ws' })
 }
 
@@ -37,9 +42,7 @@ async function loadAccount(seed) {
     ss58Format: 38,
     type: signingKeyPairType,
   })
-
-  const mnemonic = seed
-  const account = keyring.addFromUri(mnemonic)
+  const account = keyring.addFromMnemonic(seed)
   return account
 }
 
@@ -73,16 +76,14 @@ async function getKeypairs(account, mnemonic) {
 
 async function getDidDoc(account, keypairs) {
   await status('checking for existing DID...')
-  const sign = async ({ data, alg }) => ({
-    data: keypairs.authentication.sign(data),
-    alg,
-  })
-  const { extrinsic, did } = await Did.DidUtils.writeDidFromPublicKeys(
-    { sign },
-    account.address,
-    keypairs.relationships
+  const { api } =
+    await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
+  const identifier = Did.DidUtils.getKiltDidFromIdentifier(
+    encodeAddress(keypairs.authentication.publicKey, 38),
+    'full'
   )
-  let didDoc = await Did.DefaultResolver.resolveDoc(did)
+
+  let didDoc = await Did.DidResolver.resolveDoc(identifier)
   if (didDoc) {
     await status('DID loaded from chain...')
     return didDoc
@@ -107,14 +108,58 @@ async function getDidDoc(account, keypairs) {
     }
   }
 
-  const resolveOn = BlockchainUtils.IS_FINALIZED
-  await BlockchainUtils.signAndSubmitTx(extrinsic, account, { resolveOn })
+  await new Did.FullDidCreationBuilder(api, {
+    publicKey: keypairs.authentication.publicKey,
+    type: VerificationKeyType.Sr25519,
+  })
+    .addEncryptionKey({
+      publicKey: keypairs.keyAgreement.publicKey,
+      type: EncryptionKeyType.X25519,
+    })
+    .setAttestationKey({
+      publicKey: keypairs.assertion.publicKey,
+      type: VerificationKeyType.Sr25519,
+    })
+    .consumeWithHandler(
+      {
+        async sign({ data, alg }) {
+          const { authentication } = keypairs
+          return {
+            data: authentication.sign(data, { withType: false }),
+            alg,
+          }
+        },
+      },
+      account.address,
+      async (creationTx) => {
+        await BlockchainUtils.signAndSubmitTx(creationTx, account, {
+          reSign: true,
+          resolveOn,
+        })
+      }
+    )
+
   await status('DID created on chain...')
-  return await Did.DefaultResolver.resolveDoc(did)
+  return Did.DidResolver.resolveDoc(identifier)
 }
 
-async function GithubCType() {
-  const draft = CType.fromSchema({
+const githubClaimContents = { Username: 'Friendship', 'User ID': 'Friend' }
+
+const twitchClaimContents = { Username: 'Friendship', 'User ID': 'Friend' }
+
+const twitterClaimContents = { Twitter: 'Friendship' }
+
+const emailClaimContents = { Email: 'Friendship@howdy' }
+
+const discordClaimContents = {
+  Username: 'Friendship',
+}
+
+async function getCTypes(didDoc, account, keypairs) {
+  let ctypeTx = []
+  const { api } =
+    await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
+  const githubCType = CType.fromSchema({
     $schema: 'http://kilt-protocol.org/draft-01/ctype#',
     title: 'GitHub',
     properties: {
@@ -128,72 +173,11 @@ async function GithubCType() {
     type: 'object',
   })
 
-  if (!(await CTypeUtils.verifyStored(draft)))
-    console.log('github ctype not stored on peregrine.')
-  return draft
-}
+  if (!(await githubCType.verifyStored())) {
+    ctypeTx.push(await githubCType.getStoreTx())
+  }
 
-const githubClaimContents = { Username: 'BigBoy9000', 'User ID': 'Friend' }
-
-async function TwitchCType() {
-  const draft = CType.fromSchema({
-    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-    title: 'Twitch',
-    properties: {
-      Username: {
-        type: 'string',
-      },
-      'User ID': {
-        type: 'string',
-      },
-    },
-    type: 'object',
-  })
-  if (!(await CTypeUtils.verifyStored(draft)))
-    console.log('twitch ctype not stored on peregrine.')
-  return draft
-}
-
-const twitchClaimContents = { Username: 'BigBoy9000', 'User ID': 'Friend' }
-
-async function TwitterCType() {
-  const draft = CType.fromSchema({
-    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-    title: 'Twitter',
-    properties: {
-      Twitter: {
-        type: 'string',
-      },
-    },
-    type: 'object',
-  })
-  if (!(await CTypeUtils.verifyStored(draft)))
-    console.log('twitter ctype not stored on peregrine.')
-  return draft
-}
-
-const twitterClaimContents = { Twitter: 'BigBoy9000' }
-
-async function EmailCType() {
-  const draft = CType.fromSchema({
-    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-    title: 'Email',
-    properties: {
-      Email: {
-        type: 'string',
-      },
-    },
-    type: 'object',
-  })
-  if (!(await CTypeUtils.verifyStored(draft)))
-    console.log('email ctype not stored on peregrine.')
-  return draft
-}
-
-const emailClaimContents = { Email: 'BigBoy9000@howdy' }
-
-async function DiscordCType() {
-  const draft = CType.fromSchema({
+  const discordCType = CType.fromSchema({
     $schema: 'http://kilt-protocol.org/draft-01/ctype#',
     title: 'Discord',
     properties: {
@@ -209,41 +193,62 @@ async function DiscordCType() {
     },
     type: 'object',
   })
-  if (!(await CTypeUtils.verifyStored(draft)))
-    console.log('discord ctype not stored on peregrine.')
-  return draft
-}
 
-const discordClaimContents = {
-  Username: 'BigBoy9000',
-}
+  if (!(await discordCType.verifyStored())) {
+    ctypeTx.push(await discordCType.getStoreTx())
+  }
 
-export async function attestClaim(claim, didDoc, account, keypairs) {
-  const request = RequestForAttestation.fromClaim(claim)
-  await request.signWithKey(
-    {
-      async sign({ data, alg }) {
-        const { assertion } = keypairs
-        return {
-          data: assertion.sign(data, { withType: false }),
-          alg,
-        }
+  const emailCType = CType.fromSchema({
+    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
+    title: 'Email',
+    properties: {
+      Email: {
+        type: 'string',
       },
     },
-    didDoc.details.getKeyIds(KeyRelationship.assertionMethod)[0]
-  )
+    type: 'object',
+  })
 
-  const attestation = Attestation.fromRequestAndDid(request, didDoc.details.did)
+  if (!(await emailCType.verifyStored())) {
+    ctypeTx.push(await emailCType.getStoreTx())
+  }
 
-  const attested = Boolean(await Attestation.query(attestation.claimHash))
-  if (attested)
-    return Credential.fromRequestAndAttestation(request, attestation)
-  const fullDid = await Did.FullDidDetails.fromChainInfo(didDoc.details.did)
-  await attestation
-    .store()
-    .then((call) =>
-      didDoc.authorizeExtrinsic(
-        call,
+  const twitchCType = CType.fromSchema({
+    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
+    title: 'Twitch',
+    properties: {
+      Username: {
+        type: 'string',
+      },
+      'User ID': {
+        type: 'string',
+      },
+    },
+    type: 'object',
+  })
+  if (!(await twitchCType.verifyStored())) {
+    ctypeTx.push(await twitchCType.getStoreTx())
+  }
+
+  const twitterCType = CType.fromSchema({
+    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
+    title: 'Twitter',
+    properties: {
+      Twitter: {
+        type: 'string',
+      },
+    },
+    type: 'object',
+  })
+
+  if (!(await twitterCType.verifyStored())) {
+    ctypeTx.push(await twitterCType.getStoreTx())
+  }
+
+  if (ctypeTx.length > 0) {
+    const batch = await new Did.DidBatchBuilder(api, didDoc.details)
+      .addMultipleExtrinsics(ctypeTx)
+      .consume(
         {
           async sign({ data, alg }) {
             const { assertion } = keypairs
@@ -255,16 +260,117 @@ export async function attestClaim(claim, didDoc, account, keypairs) {
         },
         account.address
       )
-    )
-    .then((tx) => submitExtrinsicWithResign(tx, account))
 
-  return Credential.fromRequestAndAttestation(request, attestation)
+    await BlockchainUtils.signAndSubmitTx(batch, account, {
+      reSign: true,
+      resolveOn,
+    })
+  }
+
+  return { githubCType, discordCType, emailCType, twitchCType, twitterCType }
+}
+
+export async function attestClaim(claims, fullDid, account, keypairs) {
+  const { api } =
+    await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
+  const batchTx = await Promise.all(
+    claims.map(async (claim) => {
+      const request = RequestForAttestation.fromClaim(claim)
+
+      await request.signWithDidKey(
+        {
+          async sign({ data, alg }) {
+            const { authentication } = keypairs
+            return {
+              data: authentication.sign(data, { withType: false }),
+              alg,
+            }
+          },
+        },
+        fullDid.details,
+        fullDid.details.authenticationKey.id
+      )
+
+      const attestation = Attestation.fromRequestAndDid(
+        request,
+        fullDid.details.did
+      )
+
+      const attested = Boolean(await Attestation.query(attestation.claimHash))
+      if (attested) return null
+
+      return attestation.getStoreTx()
+    })
+  )
+
+  if (batchTx.filter((val) => val !== true)) {
+    const batch = await new Did.DidBatchBuilder(api, fullDid.details)
+      .addMultipleExtrinsics(batchTx)
+      .consume(
+        {
+          async sign({ data, alg }) {
+            const { assertion } = keypairs
+            return {
+              data: assertion.sign(data, { withType: false }),
+              alg,
+            }
+          },
+        },
+        account.address
+      )
+
+    await BlockchainUtils.signAndSubmitTx(batch, account, {
+      reSign: true,
+      resolveOn,
+    })
+  }
+
+  const credential = await Promise.all(
+    claims.map(async (claim) => {
+      const request = RequestForAttestation.fromClaim(claim)
+
+      await request.signWithDidKey(
+        {
+          async sign({ data, alg }) {
+            const { authentication } = keypairs
+            return {
+              data: authentication.sign(data, { withType: false }),
+              alg,
+            }
+          },
+        },
+        fullDid.details,
+        fullDid.details.authenticationKey.id
+      )
+
+      const attestation = Attestation.fromRequestAndDid(
+        request,
+        fullDid.details.did
+      )
+      return Credential.fromRequestAndAttestation(request, attestation)
+    })
+  )
+  console.log(credential)
+
+  return Object.assign({}, credential)
+}
+// to do: give each credential the correct name
+// Make the objects similar to the sporran object
+function saveAssets(credentials) {
+  const directory = `${process.cwd()}/claimer-credentials`
+  fs.rmSync(directory, { recursive: true, force: true })
+  fs.mkdirSync(directory)
+  fs.writeFileSync(
+    `${directory}/credentials.json`,
+    JSON.stringify(credentials, null, 2),
+    'utf-8'
+  )
 }
 
 export default async function () {
   await connect()
-
   const mnemonic = await getMnemonic()
+  await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
   const didDoc = await getDidDoc(
@@ -273,11 +379,9 @@ export default async function () {
     'wss://peregrine.kilt.io/parachain-public-ws'
   )
 
-  const githubCType = await GithubCType()
-  const discordCType = await DiscordCType()
-  const emailCType = await EmailCType()
-  const twitchCType = await TwitchCType()
-  const twitterCType = await TwitterCType()
+  const { githubCType, discordCType, emailCType, twitchCType, twitterCType } =
+    await getCTypes(didDoc, account, keypairs)
+
   const githubClaim = Claim.fromCTypeAndClaimContents(
     githubCType,
     githubClaimContents,
@@ -303,38 +407,21 @@ export default async function () {
     discordClaimContents,
     didDoc.details.did
   )
-  //   const githubCredential = await attestClaim(githubClaim, didDoc, account, keypairs)
-  //   const twitchCredential = await attestClaim(twitchClaim, didDoc, account, keypairs)
-  const twitterCredential = await attestClaim(
-    twitterClaim,
+  const credential = await attestClaim(
+    [githubClaim, twitchClaim, twitterClaim, emailClaim, discordClaim],
     didDoc,
     account,
     keypairs
   )
-  const emailCredential = await attestClaim(
-    emailClaim,
-    didDoc,
-    account,
-    keypairs
+
+  await status('Generating claimer credentials assets...')
+  saveAssets(credential)
+
+  await status(
+    `Done! Assets saved to /claimer-assets\n${chalk.reset.gray(
+      '... press any key to return to main menu'
+    )}`,
+    { keyPress: true }
   )
-  const discordCredential = await attestClaim(
-    discordClaim,
-    didDoc,
-    account,
-    keypairs
-  )
-  console.log({
-    // githubCredential,
-    // twitchCredential,
-    twitterCredential,
-    emailCredential,
-    discordCredential,
-  })
-  return {
-    // githubCredential,
-    // twitchCredential,
-    twitterCredential,
-    emailCredential,
-    discordCredential,
-  }
+  return mainMenu()
 }
