@@ -2,7 +2,6 @@ import {
   Claim,
   Attestation,
   RequestForAttestation,
-  Credential,
   CType,
   Did,
   Balance,
@@ -23,7 +22,7 @@ import {
   blake2AsU8a,
   encodeAddress,
 } from '@polkadot/util-crypto'
-import { getMnemonic, status, mainMenu } from './_prompts.js'
+import { getMnemonic, status, mainMenu, getClaimDetails } from './_prompts.js'
 
 import chalk from 'chalk'
 import fs from 'fs'
@@ -141,18 +140,6 @@ async function getDidDoc(account, keypairs) {
 
   await status('DID created on chain...')
   return Did.DidResolver.resolveDoc(identifier)
-}
-
-const githubClaimContents = { Username: 'Friendship', 'User ID': 'Friend' }
-
-const twitchClaimContents = { Username: 'Friendship', 'User ID': 'Friend' }
-
-const twitterClaimContents = { Twitter: 'Friendship' }
-
-const emailClaimContents = { Email: 'Friendship@howdy' }
-
-const discordClaimContents = {
-  Username: 'Friendship',
 }
 
 async function getCTypes(didDoc, account, keypairs) {
@@ -274,7 +261,7 @@ export async function attestClaim(claims, fullDid, account, keypairs) {
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
   const batchTx = await Promise.all(
-    claims.map(async ({ ctype, claim }) => {
+    claims.map(async ({ claim }) => {
       const request = RequestForAttestation.fromClaim(claim)
 
       await request.signWithDidKey(
@@ -325,7 +312,7 @@ export async function attestClaim(claims, fullDid, account, keypairs) {
     })
   }
 
-  const credentials = await Promise.all(
+  return await Promise.all(
     claims.map(async ({ ctype, claim }) => {
       const request = RequestForAttestation.fromClaim(claim)
 
@@ -343,24 +330,15 @@ export async function attestClaim(claims, fullDid, account, keypairs) {
         fullDid.details.authenticationKey.id
       )
 
-      const attestation = Attestation.fromRequestAndDid(
-        request,
-        fullDid.details.did
-      )
-
-      const cred = Credential.fromRequestAndAttestation(request, attestation)
-
       return {
-        attester: "TestSocialKYC",
+        attester: 'PeregrineSelfAttestedSocialKYC',
         cTypeTitle: ctype,
         isDownloaded: true,
         name: ctype,
-        ...cred
+        ...request,
       }
     })
   )
-
-  return credentials
 }
 // to do: give each credential the correct name
 // Make the objects similar to the sporran object
@@ -368,7 +346,7 @@ function saveAssets(credentials) {
   const directory = `${process.cwd()}/claimer-credentials`
   fs.rmSync(directory, { recursive: true, force: true })
   fs.mkdirSync(directory)
-  credentials.forEach(credential => {
+  credentials.forEach((credential) => {
     fs.writeFileSync(
       `${directory}/${credential.name}.json`,
       JSON.stringify(credential, null, 2),
@@ -391,6 +369,29 @@ export default async function () {
 
   const { githubCType, discordCType, emailCType, twitchCType, twitterCType } =
     await getCTypes(didDoc, account, keypairs)
+
+  await status('Generating claimer github claim content...')
+  const githubClaimContents = await getClaimDetails(
+    githubCType.schema.properties
+  )
+
+  await status('Generating claimer twitch claim content...')
+  const twitchClaimContents = await getClaimDetails(
+    twitchCType.schema.properties
+  )
+
+  await status('Generating claimer twitter claim content...')
+  const twitterClaimContents = await getClaimDetails(
+    twitterCType.schema.properties
+  )
+
+  await status('Generating claimer email claim content...')
+  const emailClaimContents = await getClaimDetails(emailCType.schema.properties)
+
+  await status('Generating claimer discord claim content...')
+  const discordClaimContents = await getClaimDetails(
+    discordCType.schema.properties
+  )
 
   const githubClaim = Claim.fromCTypeAndClaimContents(
     githubCType,
@@ -419,20 +420,16 @@ export default async function () {
   )
 
   const claims = [
-    { ctype: 'test github', claim: githubClaim },
-    { ctype: 'test twitch', claim: twitchClaim },
-    { ctype: 'test twitter', claim: twitterClaim },
-    { ctype: 'test email', claim: emailClaim },
-    { ctype: 'test discord', claim: discordClaim },
+    { ctype: 'peregrine github', claim: githubClaim },
+    { ctype: 'peregrine twitch', claim: twitchClaim },
+    { ctype: 'peregrine twitter', claim: twitterClaim },
+    { ctype: 'peregrine email', claim: emailClaim },
+    { ctype: 'peregrine discord', claim: discordClaim },
   ]
 
-  const credentials = await attestClaim(
-    claims,
-    didDoc,
-    account,
-    keypairs
-  )
-
+  await status('Self-attesting the claims...')
+  const credentials = await attestClaim(claims, didDoc, account, keypairs)
+  
   await status('Generating claimer credentials assets...')
   saveAssets(credentials)
 

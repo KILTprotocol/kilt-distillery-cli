@@ -19,7 +19,7 @@ export default async function({ returnAssets = false } = {}) {
   const mnemonic = testnet ? 
     await useExisting() ? 
     await getMnemonic() : 
-    await mnemonicGenerate() :
+    mnemonicGenerate() :
     await getMnemonic()
 
   const origin = await getOrigin()
