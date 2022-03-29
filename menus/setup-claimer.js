@@ -1,5 +1,6 @@
 import { Claim, init, ChainHelpers } from '@kiltprotocol/sdk-js'
-import { getMnemonic, status, mainMenu, getClaimDetails } from './_prompts.js'
+import { getMnemonic, status, getClaimDetails } from './_prompts.js'
+import mainMenu from './main-menu.js'
 import {
   getAllSocialCTypes,
   attestClaim,
@@ -115,5 +116,6 @@ export default async function () {
     )}`,
     { keyPress: true }
   )
-  return mainMenu()
+
+  return await mainMenu()
 }

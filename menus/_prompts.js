@@ -1,6 +1,8 @@
 import inquirer from 'inquirer'
 import chalk from 'chalk'
 import { mnemonicValidate } from '@polkadot/util-crypto'
+import PressToContinuePrompt from 'inquirer-press-to-continue'
+inquirer.registerPrompt('press-to-continue', PressToContinuePrompt)
 
 async function prompt(prompt) {
   console.clear()
@@ -13,12 +15,21 @@ async function prompt(prompt) {
 export async function status(msg, opts = {}) {
   return new Promise(async (resolve) => {
     const { wait = 500, keyPress = false } = opts
+    const message = chalk.bold(` KILT DISTILLERY CLI - ${chalk.reset(msg)}`)
     console.clear()
-    console.log(chalk.bold(` KILT DISTILLERY CLI - ${chalk.reset(msg)}`))
-    if (!keyPress) return setTimeout(resolve, wait)
-    process.stdin.setRawMode(true)
-    process.stdin.resume()
-    process.stdin.on('data', resolve)
+    if (!keyPress) {
+      console.log(message)
+      return setTimeout(resolve, wait)
+    }
+
+    await inquirer.prompt({
+      name: 'key',
+      type: 'press-to-continue',
+      message: message,
+      anyKey: true,
+    })
+    
+    resolve()
   })
 }
 

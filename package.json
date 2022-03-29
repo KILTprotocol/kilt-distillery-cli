@@ -11,6 +11,7 @@
     "fs-extra": "^10.0.1",
     "global": "^4.4.0",
     "inquirer": "^8.2.0",
+    "inquirer-press-to-continue": "^1.0.8",
     "valid-url": "^1.0.9"
   },
   "resolutions": {
@@ -26,7 +27,6 @@
   },
   "author": "Paul Pomerleau",
   "description": "CLI tool to help devs quickly accomplish commons tasks and get started with project recipes",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -11,8 +11,8 @@ const menus = {
   setupClaimer,
 }
 
+let x = 1
 export default async function () {
   const action = await mainMenu()
-  console.log(action)
-  menus[action]()
+  return menus[action]()
 }
