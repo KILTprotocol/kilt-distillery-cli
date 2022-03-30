@@ -236,7 +236,7 @@ async function getEnvironmentVariables(
   dotenv += `WSS_ADDRESS=${network}\n`
   dotenv += `VERIFIER_MNEMONIC=${mnemonic}\n`
   dotenv += `VERIFIER_ADDRESS=${account.address}\n`
-  dotenv += `VERIFIER_DID_URI=${didDoc.details.didUri}`
+  dotenv += `VERIFIER_DID_URI=${didDoc.details.uri}`
   return dotenv
 }
 
