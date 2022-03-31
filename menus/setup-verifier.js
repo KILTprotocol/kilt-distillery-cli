@@ -8,6 +8,8 @@ import {
   RequestForAttestation,
   Did,
   BlockchainUtils,
+  Utils,
+  KeyRelationship,
 } from '@kiltprotocol/sdk-js'
 import {
   mnemonicGenerate,
@@ -30,6 +32,10 @@ import {
 import chalk from 'chalk'
 import fs from 'fs'
 import mainMenu from './main-menu.js'
+
+const DEFAULT_VERIFIABLECREDENTIAL_TYPE = 'VerifiableCredential'
+const KILT_VERIFIABLECREDENTIAL_TYPE = 'KiltCredential2020'
+const KILT_SELF_SIGNED_PROOF_TYPE = 'KILTSelfSigned2020'
 
 /**
  * setup verifier results in
@@ -55,12 +61,7 @@ export default async function ({ returnAssets = false } = {}) {
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
   const didDoc = await getDidDoc(account, keypairs, network)
-  const credential = await getDomainLinkCredential(
-    keypairs,
-    didDoc,
-    origin,
-    account
-  )
+  const credential = await getDomainLinkCredential(keypairs, origin, account)
   const didConfig = await getDidConfiguration(credential)
   const dotenv = await getEnvironmentVariables(
     network,
@@ -97,11 +98,13 @@ async function connect(network) {
   await init({ address: network })
 }
 
-async function getDomainLinkCredential(keypairs, didDoc, origin, account) {
+async function getDomainLinkCredential(keypairs, origin, account) {
   const fullDid = await Did.FullDidDetails.fromChainInfo(
     encodeAddress(keypairs.authentication.publicKey, 38)
   )
+
   await status('Creating Domain Linkage Credential...')
+
   const ctype = CType.fromSchema({
     $schema: 'http://kilt-protocol.org/draft-01/ctype#',
     title: 'Domain Linkage Credential',
@@ -129,21 +132,26 @@ async function getDomainLinkCredential(keypairs, didDoc, origin, account) {
 
   const request = RequestForAttestation.fromClaim(claim)
 
-  await request.signWithDidKey(
+  const { signature, keyId } = await fullDid.signPayload(
+    Utils.Crypto.coToUInt8(request.rootHash),
     {
       async sign({ data, alg }) {
-        const { authentication } = keypairs
+        const { assertion } = keypairs
         return {
-          data: authentication.sign(data, { withType: false }),
+          data: assertion.sign(data, { withType: false }),
           alg,
         }
       },
     },
-    fullDid,
-    fullDid.authenticationKey.id
+    fullDid.getVerificationKeys(KeyRelationship.assertionMethod)[0].id
   )
 
-  const attestation = Attestation.fromRequestAndDid(request, fullDid.did)
+  const selfSignedRequest = await request.addSignature(signature, keyId)
+
+  const attestation = Attestation.fromRequestAndDid(
+    selfSignedRequest,
+    fullDid.did
+  )
 
   const attested = Boolean(await Attestation.query(attestation.claimHash))
   if (attested) return null
@@ -193,7 +201,7 @@ async function getDidConfiguration(credential) {
 
   // add self-signed proof
   const proof = {
-    type: 'KILTSelfSigned2020',
+    type: KILT_SELF_SIGNED_PROOF_TYPE,
     proofPurpose: 'assertionMethod',
     verificationMethod: claimerSignature.keyId,
     signature: claimerSignature.signature,
@@ -212,9 +220,9 @@ async function getDidConfiguration(credential) {
         issuanceDate,
         expirationDate,
         type: [
-          'VerifiableCredential',
+          DEFAULT_VERIFIABLECREDENTIAL_TYPE,
           'DomainLinkageCredential',
-          'KiltCredential2020',
+          KILT_VERIFIABLECREDENTIAL_TYPE,
         ],
         credentialSubject,
         proof,
@@ -236,7 +244,7 @@ async function getEnvironmentVariables(
   dotenv += `WSS_ADDRESS=${network}\n`
   dotenv += `VERIFIER_MNEMONIC=${mnemonic}\n`
   dotenv += `VERIFIER_ADDRESS=${account.address}\n`
-  dotenv += `VERIFIER_DID_URI=${didDoc.details.uri}`
+  dotenv += `VERIFIER_DID_URI=${didDoc.details.did}`
   return dotenv
 }
 
