@@ -105,7 +105,7 @@ export default async function () {
   ]
 
   await status('Self-attesting the claims...')
-  const credentials = await attestClaim(claims, didDoc, account, keypairs)
+  const credentials = await attestClaim(claims, account, keypairs)
 
   await status('Generating claimer credentials assets...')
   saveAssets(credentials)

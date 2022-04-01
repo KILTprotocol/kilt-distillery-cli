@@ -254,32 +254,38 @@ export async function getAllSocialCTypes(didDoc, account, keypairs) {
   return { githubCType, discordCType, emailCType, twitchCType, twitterCType }
 }
 
-export async function attestClaim(claims, fullDid, account, keypairs) {
+export async function attestClaim(claims, account, keypairs) {
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
+  const fullDid = await Did.FullDidDetails.fromChainInfo(
+    encodeAddress(keypairs.authentication.publicKey, 38)
+  )
+  let requests = []
   const batchTx = await Promise.all(
     claims.map(async ({ claim }) => {
       const request = RequestForAttestation.fromClaim(claim)
 
-      await request.signWithDidKey(
+      const { signature, keyId } = await fullDid.signPayload(
+        Utils.Crypto.coToUInt8(request.rootHash),
         {
           async sign({ data, alg }) {
-            const { authentication } = keypairs
+            const { assertion } = keypairs
             return {
-              data: authentication.sign(data, { withType: false }),
+              data: assertion.sign(data, { withType: false }),
               alg,
             }
           },
         },
-        fullDid.details,
-        fullDid.details.authenticationKey.id
+        fullDid.getVerificationKeys(KeyRelationship.assertionMethod)[0].id
       )
+
+      const selfSignedRequest = await request.addSignature(signature, keyId)
 
       const attestation = Attestation.fromRequestAndDid(
-        request,
-        fullDid.details.did
+        selfSignedRequest,
+        fullDid.did
       )
-
+      requests.push(selfSignedRequest)
       const attested = Boolean(await Attestation.query(attestation.claimHash))
       if (attested) return null
 
@@ -288,7 +294,7 @@ export async function attestClaim(claims, fullDid, account, keypairs) {
   )
 
   if (batchTx.filter((val) => val !== true)) {
-    const batch = await new Did.DidBatchBuilder(api, fullDid.details)
+    const batch = await new Did.DidBatchBuilder(api, fullDid)
       .addMultipleExtrinsics(batchTx)
       .consume(
         {
@@ -310,29 +316,16 @@ export async function attestClaim(claims, fullDid, account, keypairs) {
   }
 
   return await Promise.all(
-    claims.map(async ({ ctype, claim }) => {
-      const request = RequestForAttestation.fromClaim(claim)
-
-      await request.signWithDidKey(
-        {
-          async sign({ data, alg }) {
-            const { authentication } = keypairs
-            return {
-              data: authentication.sign(data, { withType: false }),
-              alg,
-            }
-          },
-        },
-        fullDid.details,
-        fullDid.details.authenticationKey.id
-      )
+    requests.map(async (request, index) => {
+      const attested = Boolean(await Attestation.query(request.rootHash))
 
       return {
         attester: 'PeregrineSelfAttestedSocialKYC',
-        cTypeTitle: ctype,
+        cTypeTitle: claims[index].ctype,
         isDownloaded: true,
-        name: ctype,
-        ...request,
+        name: claims[index].ctype,
+        request: { ...request },
+        attested,
       }
     })
   )
