@@ -1,8 +1,8 @@
 import { randomAsHex, cryptoWaitReady } from "@polkadot/util-crypto"
 import getStorage from "../../utilities/storage";
 import { decryptChallenge, getFullDid } from "../../utilities/verifier";
-import { exit, getEncryptionKey, methodNotFound, init } from "../../utilities/helpers";
-
+import { exit, getEncryptionKey, methodNotFound } from "../../utilities/helpers";
+import { init } from '@kiltprotocol/sdk-js'
 /** validateSession
  * checks that an established session is valid
  */
