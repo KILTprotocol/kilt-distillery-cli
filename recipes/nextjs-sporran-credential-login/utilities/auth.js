@@ -99,7 +99,7 @@ export async function getDidFromValidSignature({ input, output }) {
 
   // resolve the client's did document
   const didUri = output.didKeyUri.split('#').shift()
-  const didDocument = await Did.DefaultResolver.resolveDoc(didUri);
+  const didDocument = await Did.DidResolver.resolveDoc(didUri);
   if (!didDocument) {
     throw new Error('Could not resolve DID');
   }
