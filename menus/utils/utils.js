@@ -12,13 +12,13 @@ import {
   EncryptionKeyType,
 } from '@kiltprotocol/sdk-js'
 import {
-  naclBoxPairFromSecret,
   sr25519PairFromSeed,
   mnemonicToMiniSecret,
   keyExtractPath,
   keyFromPath,
   blake2AsU8a,
   encodeAddress,
+  naclBoxPairFromSecret,
 } from '@polkadot/util-crypto'
 import { status } from '../_prompts.js'
 import chalk from 'chalk'
