@@ -84,9 +84,9 @@ export async function getDidFromValidSignature({ input, output }) {
   }
 
   // verify the signature
-  const isValid =
-    signatureVerify(input, output.signature, publicKey.publicKeyHex)
-      .isValid === true;
+    const isValid =
+      signatureVerify(input, output.signature, publicKey.publicKey)
+        .isValid === true;
 
   // disconnect 
   await disconnect()
