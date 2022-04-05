@@ -128,6 +128,10 @@ export async function getProjectRecipe() {
           name: 'NextJS Login w/Sporran & Credential Verification',
           value: 'nextjs-sporran-credential-login',
         },
+        {
+          name: 'Test',
+          value: 'test'
+        },
         { name: 'Cancel', value: 'cancel' },
       ],
     })

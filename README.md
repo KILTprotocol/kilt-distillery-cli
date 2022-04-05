@@ -9,3 +9,6 @@ clone the repo and open terminal
 from the terminal  
 `kilt-distillery-cli`  
 
+## TODO
+- [ ] pull recipes from github repos
+- [ ] add claimer credential setup to credential-signin recipe
