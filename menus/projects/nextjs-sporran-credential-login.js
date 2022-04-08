@@ -1,12 +1,12 @@
-import { status, getJWTExpiry, getJWTRenewal, getDappName } from "../_prompts.js"
+import { status, getJWTExpiry, getJWTRenewal, createTestCredentials } from "../_prompts.js"
 import setupVerifier from "../setup-verifier.js"
 import { randomAsHex } from "@polkadot/util-crypto"
 import { nextJsCredentialLogin } from "../../recipes/index.js"
+import setupClaimer from "../setup-claimer.js"
 import fs from 'fs-extra'
-import { exec } from "child_process"
+import exitCli from "../exit-cli.js"
 
-export default async function () {
-  const dappName = await getDappName()
+export default async function (dappName) {
   const jwtSecret = randomAsHex(16)
   const jwtExpiry = await getJWTExpiry()
   const renewJwt = await getJWTRenewal()
@@ -37,17 +37,13 @@ export default async function () {
   })
   fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
   fs.writeFileSync(`${process.cwd()}/${dappName}/public/didConfiguration.json`, JSON.stringify(didConfig, null, 2))
+
+  if (!network.startsWith('wss://spiritnet')) {
+    const needClaimer = await createTestCredentials()
+    if (needClaimer) await setupClaimer()
+  }
   
-  status('initializing project...')
-  process.chdir(dappName)
-  exec("npm init -y", () => {
-    status('installing dependencies...')
-    exec('npm install', () => {
-      status('building...')
-      exec('npm run build', () => {
-        status('start project with: npm run start')
-        process.exit()
-      })
-    })
-  })
+  await status(`all done! to run the project:\nmove to '${dappName}' directory\nnpm install\nnpm run dev`)
+
+  return exitCli()
 }

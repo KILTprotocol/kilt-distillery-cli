@@ -11,6 +11,7 @@ import {
 
 import chalk from 'chalk'
 import fs from 'fs'
+import { mnemonicGenerate } from '@polkadot/util-crypto'
 
 async function connect() {
   await status('connecting to network...')
@@ -34,7 +35,7 @@ function saveAssets(credentials) {
 
 export default async function () {
   await connect()
-  const mnemonic = await getMnemonic()
+  const mnemonic = mnemonicGenerate()
   await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
@@ -109,6 +110,12 @@ export default async function () {
 
   await status('Generating claimer credentials assets...')
   saveAssets(credentials)
+
+  fs.writeFileSync(
+    `${process.cwd()}/claimer-credentials/.env`,
+    `CLAIMER_MNEMONIC=${mnemonic}\nCLAIMER_DID=${didDoc.details.did}`,
+    'utf-8'
+  )
 
   await status(
     `Done! Assets saved to /claimer-assets\n${chalk.reset.gray(

@@ -2,6 +2,8 @@ import inquirer from 'inquirer'
 import chalk from 'chalk'
 import { mnemonicValidate } from '@polkadot/util-crypto'
 import PressToContinuePrompt from 'inquirer-press-to-continue'
+import projects from './projects/index.js'
+
 inquirer.registerPrompt('press-to-continue', PressToContinuePrompt)
 
 async function prompt(prompt) {
@@ -40,9 +42,9 @@ export async function mainMenu() {
       name: 'action',
       message: 'select action',
       choices: [
-        { name: 'setup verifier assets', value: 'setupVerifier' },
-        { name: 'setup claimer socialKYC credential', value: 'setupClaimer' },
         { name: 'create project from recipe', value: 'createProject' },
+        { name: 'setup claimer test credential', value: 'setupClaimer' },
+        //{ name: 'setup verifier assets', value: 'setupVerifier' },
         { name: 'exit', value: 'exitCLI' },
       ],
     })
@@ -87,7 +89,6 @@ export async function getNetwork() {
           name: 'peregrine testnet',
           value: 'wss://peregrine.kilt.io/parachain-public-ws',
         },
-        { name: 'sporran testnet', value: 'wss://sporran-testnet.kilt.io' },
         {
           name: 'Spirit mainnet',
           value: 'wss://spiritnet.api.onfinality.io/public-ws',
@@ -113,29 +114,19 @@ export async function getOrigin() {
   ).origin
 }
 
-export async function getProjectRecipe() {
-  return (
-    await prompt({
-      type: 'list',
-      name: 'project',
-      message: 'select project',
-      choices: [
-        {
-          name: 'NextJS Login w/Sporran & DID Signature',
-          value: 'nextjs-sporran-did-login',
-        },
-        {
-          name: 'NextJS Login w/Sporran & Credential Verification',
-          value: 'nextjs-sporran-credential-login',
-        },
-        {
-          name: 'Test',
-          value: 'test'
-        },
-        { name: 'Cancel', value: 'cancel' },
-      ],
-    })
-  ).project
+export async function getRecipeProject() {
+  const { project } = await prompt({
+    type: 'list',
+    name: 'project',
+    message: 'select project',
+    choices: [
+      ...projects.map(({ name }, value) => ({ name, value })),
+      { name: 'Cancel', value: 'cancel' },
+    ],
+  })
+
+  if (project === 'cancel') return null
+  return projects[project]
 }
 
 export async function getJWTExpiry() {
@@ -183,4 +174,20 @@ export async function getClaimDetails(object) {
     }
   })
   return inquirer.prompt(question)
+}
+
+export async function createTestCredentials() {
+  return (
+    (
+      await prompt({
+        type: 'list',
+        name: 'renew',
+        message: 'Create a test Claimer w/Credential?',
+        choices: [
+          { name: 'yes', value: 'true' },
+          { name: 'no', value: 'false' },
+        ],
+      })
+    ).renew === 'true'
+  )
 }
