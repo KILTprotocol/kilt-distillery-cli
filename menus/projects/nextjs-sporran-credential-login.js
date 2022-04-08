@@ -1,7 +1,6 @@
 import { status, getJWTExpiry, getJWTRenewal, createTestCredentials } from "../_prompts.js"
 import setupVerifier from "../setup-verifier.js"
 import { randomAsHex } from "@polkadot/util-crypto"
-import { nextJsCredentialLogin } from "../../recipes/index.js"
 import setupClaimer from "../setup-claimer.js"
 import fs from 'fs-extra'
 import exitCli from "../exit-cli.js"
