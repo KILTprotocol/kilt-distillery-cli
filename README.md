@@ -28,7 +28,7 @@ kilt-distillery-cli
 
 Accessing the KILT CLI, choose setup claimer socialKYC credentials
 
-[](./public/img/selectClaimerAction.png)
+![](./public/img/selectClaimerAction.png)
 
 Enter a test mnemonic you wish to use for the credentials. Make sure to note down the mnemonic for future steps.
 
@@ -36,19 +36,19 @@ Enter a test mnemonic you wish to use for the credentials. Make sure to note dow
 
 If the mnemonic doesn’t already have tokens, it will check the balance and request tokens from the KILT Faucet
 
-[](./public/img/requestingFunds.png)
+![](./public/img/requestingFunds.png)
 
 Once the tokens have been requested, the script will continue to create a DID for the newly generated account or pull a preexisting DID based on the sporran DID creation.
 
 Afterwards, the script will prompt you to enter some claimer details
 
-[](./public/img/enteringClaimerDetails.png)
+![](./public/img/enteringClaimerDetails.png)
 
 Enter the desired claimer details for testing for each of the available socialKYC CTypes check out the GitHub repository. For more information on what is available, check out the socialKYC. 
 
 Once you have entered the claimers' details, the self-attestation process will happen.
 
-[](./public/img/claimerSelfAttesting.png)
+![](./public/img/claimerSelfAttesting.png)
 
 Congratulation, you have created the claims and will have a folder called `claimer-credentials` with all the JSON files. Using any editor, you can now view the credential.
 
@@ -116,17 +116,17 @@ kilt-distillery-cli
 
 Accessing the KILT CLI, choose setup verifier assets
 
-[](./public/img/selectVerifierAction.png)
+![](./public/img/selectVerifierAction.png)
 
 Select the network for testing or a production-ready verifier asset. Recommended to begin with peregrine testnet for testing purposes
 
-[](./public/img/selectNetwork.png)
+![](./public/img/selectNetwork.png)
 
 Here you can select an existing mnemonic for both production or testing purposes. You must have tokens for production creation as it requires creating an attestation on the live network.
 
 Generating a new mnemonic can request funds from the faucet and, therefore, usable for testing
 
-[](./public/img/verifierMnemonicSelection.png)
+![](./public/img/verifierMnemonicSelection.png)
 
 If you enter a test mnemonic, you wish to use for the credentials. Make sure to note down the mnemonic for future steps.
 
@@ -134,17 +134,17 @@ If you enter a test mnemonic, you wish to use for the credentials. Make sure to 
 
 If the mnemonic doesn’t already have tokens, it will check the balance and make a request to the KILT Faucet
 
-[](./public/img/requestingFunds.png)
+![](./public/img/requestingFunds.png)
 
 Once the tokens have been requested the script will continue, creating a DID for the newly generated account or pull a preexisting DID based off the sporran DID creation.
 
 Afterwards, now enter the origin for the domain linkage of the website for the credential. For more details about the Domain Linkage, check out the ingredient or the KILT credential API or Web3 Spec
 
-[](./public/img/enteringOrigin.png)
+![](./public/img/enteringOrigin.png)
 
 Creating the domain linkage credential
 
-[](./public/img/creatingDomainLinkage.png)
+![](./public/img/creatingDomainLinkage.png)
 
 Congratulations you’ll have verifier assets to be used in the application in the current folder directory.
 
