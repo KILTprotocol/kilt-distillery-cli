@@ -9,9 +9,6 @@ clone the repo and open terminal
 from the terminal  
 `kilt-distillery-cli`  
 
-## TODO
-- [ ] pull recipes from github repos
-- [ ] add claimer credential setup to credential-signin recipe
 ## Setup Claimer Flow
 
 The Claimer CLI tool allows you to create self-attested socialKYC on the peregrine test network. It helps speed up the testing of utilities such as web3 login or credential access on a project by running through the CLI and producing credentials in minutes.
