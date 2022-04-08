@@ -1,6 +1,9 @@
 # kilt-distillery-cli
 CLI tool to help devs quickly accomplish commons tasks and get started with project recipes
 
+## disclaimer
+This tool is in beta and intended to ease development efforts, not as a replacement for production code. 
+
 ## install
 clone the repo and open terminal  
 `sudo npm install -g .`  
