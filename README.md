@@ -6,6 +6,8 @@ This tool is in beta and intended to ease development efforts, not as a replacem
 
 ## install
 `sudo npm install -g git+https://github.com/KILTprotocol/kilt-distillery-cli`  
+or
+`sudo yarn global add git+https://github.com/KILTprotocol/kilt-distillery-cli`  
 
 ## run
 from the terminal  
