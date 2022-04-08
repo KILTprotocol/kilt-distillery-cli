@@ -18,10 +18,6 @@ export default async function () {
   dotenv += `JWT_RENEW=${renew}`
 
   status('creating files...')
-  nextJsDidLogin.forEach(file => {
-    fs.ensureFileSync(`${process.cwd()}/${dappName}/${file.path}`)
-    fs.writeFileSync(`${process.cwd()}/${dappName}/${file.path}`, file.code)
-  })
   fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
 
   status('initializing project...')

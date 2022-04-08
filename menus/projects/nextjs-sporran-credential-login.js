@@ -30,10 +30,6 @@ export default async function (dappName) {
   dotenv += `JWT_RENEW=${renewJwt ? 'true' : 'false'}`
 
   status('creating files...')
-  nextJsCredentialLogin.forEach(file => {
-    fs.ensureFileSync(`${process.cwd()}/${dappName}/${file.path}`)
-    fs.writeFileSync(`${process.cwd()}/${dappName}/${file.path}`, file.code)
-  })
   fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
   fs.writeFileSync(`${process.cwd()}/${dappName}/public/didConfiguration.json`, JSON.stringify(didConfig, null, 2))
 
