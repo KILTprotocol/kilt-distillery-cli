@@ -2,6 +2,7 @@ import inquirer from 'inquirer'
 import chalk from 'chalk'
 import { mnemonicValidate } from '@polkadot/util-crypto'
 import PressToContinuePrompt from 'inquirer-press-to-continue'
+import validUrl from 'valid-url'
 import projects from './projects/index.js'
 
 inquirer.registerPrompt('press-to-continue', PressToContinuePrompt)
@@ -44,7 +45,7 @@ export async function mainMenu() {
       choices: [
         { name: 'create project from recipe', value: 'createProject' },
         { name: 'setup claimer test credential', value: 'setupClaimer' },
-        //{ name: 'setup verifier assets', value: 'setupVerifier' },
+        { name: 'setup verifier assets', value: 'setupVerifier' },
         { name: 'exit', value: 'exitCLI' },
       ],
     })
@@ -108,7 +109,7 @@ export async function getOrigin() {
       )}\n${chalk.cyan('❯')}`,
       validate: (origin) =>
         origin.startsWith('http://localhost:') ||
-        validUrl.isUri(origin) ||
+        !!validUrl.isUri(origin) ||
         'invalid origin',
     })
   ).origin
