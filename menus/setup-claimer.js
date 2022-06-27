@@ -74,27 +74,27 @@ export default async function () {
   const githubClaim = Claim.fromCTypeAndClaimContents(
     githubCType,
     githubClaimContents,
-    didDoc.details.did
+    didDoc.details.uri
   )
   const twitchClaim = Claim.fromCTypeAndClaimContents(
     twitchCType,
     twitchClaimContents,
-    didDoc.details.did
+    didDoc.details.uri
   )
   const twitterClaim = Claim.fromCTypeAndClaimContents(
     twitterCType,
     twitterClaimContents,
-    didDoc.details.did
+    didDoc.details.uri
   )
   const emailClaim = Claim.fromCTypeAndClaimContents(
     emailCType,
     emailClaimContents,
-    didDoc.details.did
+    didDoc.details.uri
   )
   const discordClaim = Claim.fromCTypeAndClaimContents(
     discordCType,
     discordClaimContents,
-    didDoc.details.did
+    didDoc.details.uri
   )
 
   const claims = [
@@ -113,7 +113,7 @@ export default async function () {
 
   fs.writeFileSync(
     `${process.cwd()}/claimer-credentials/.env`,
-    `CLAIMER_MNEMONIC=${mnemonic}\nCLAIMER_DID=${didDoc.details.did}`,
+    `CLAIMER_MNEMONIC=${mnemonic}\nCLAIMER_DID=${didDoc.details.uri}`,
     'utf-8'
   )
 

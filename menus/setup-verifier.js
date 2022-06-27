@@ -77,7 +77,7 @@ export default async function ({ returnAssets = false } = {}) {
       origin,
       mnemonic,
       address: account.address,
-      didUri: didDoc.details.did,
+      didUri: didDoc.details.uri,
       dotenv,
       didConfig,
     }
@@ -99,9 +99,12 @@ async function connect(network) {
 }
 
 async function getDomainLinkCredential(keypairs, origin, account) {
-  const fullDid = await Did.FullDidDetails.fromChainInfo(
-    encodeAddress(keypairs.authentication.publicKey, 38)
+  const didUri = Did.Utils.getKiltDidFromIdentifier(
+    encodeAddress(keypairs.authentication.publicKey, 38),
+    'full'
   )
+
+  const fullDid = await Did.FullDidDetails.fromChainInfo(didUri)
 
   await status('Creating Domain Linkage Credential...')
 
@@ -120,39 +123,37 @@ async function getDomainLinkCredential(keypairs, origin, account) {
   })
 
   const claimContents = {
-    id: fullDid.did,
+    id: fullDid.uri,
     origin: origin,
   }
 
   const claim = Claim.fromCTypeAndClaimContents(
     ctype,
     claimContents,
-    fullDid.did
+    fullDid.uri
   )
 
   const request = RequestForAttestation.fromClaim(claim)
 
-  const { signature, keyId } = await fullDid.signPayload(
-    Utils.Crypto.coToUInt8(request.rootHash),
+  const selfSignedRequest = await request.signWithDidKey(
     {
       async sign({ data, alg }) {
-        const { assertion } = keypairs
+        const { authentication } = keypairs
         return {
-          data: assertion.sign(data, { withType: false }),
+          data: authentication.sign(data, { withType: false }),
           alg,
         }
       },
     },
-    fullDid.getVerificationKeys(KeyRelationship.assertionMethod)[0].id
+    fullDid,
+    fullDid.getVerificationKeys(KeyRelationship.authentication)[0].id
   )
-
-  const selfSignedRequest = await request.addSignature(signature, keyId)
 
   const attestation = Attestation.fromRequestAndDid(
     selfSignedRequest,
-    fullDid.did
+    fullDid.uri
   )
-
+  await status(attestation)
   const attested = Boolean(await Attestation.query(attestation.claimHash))
   if (attested) return null
 
@@ -244,7 +245,7 @@ async function getEnvironmentVariables(
   dotenv += `WSS_ADDRESS=${network}\n`
   dotenv += `VERIFIER_MNEMONIC=${mnemonic}\n`
   dotenv += `VERIFIER_ADDRESS=${account.address}\n`
-  dotenv += `VERIFIER_DID_URI=${didDoc.details.did}`
+  dotenv += `VERIFIER_DID_URI=${didDoc.details.uri}`
   return dotenv
 }
 

@@ -19,6 +19,7 @@ import {
   blake2AsU8a,
   encodeAddress,
   naclBoxPairFromSecret,
+  cryptoWaitReady,
 } from '@polkadot/util-crypto'
 import { status } from '../_prompts.js'
 import chalk from 'chalk'
@@ -38,6 +39,7 @@ export async function loadAccount(seed) {
 
 export async function getKeypairs(account, mnemonic) {
   await status('generating keypairs...')
+  await cryptoWaitReady()
   const keypairs = {
     authentication: account.derive('//did//0'),
     assertion: account.derive('//did//assertion//0'),
@@ -68,12 +70,13 @@ export async function getDidDoc(account, keypairs, network) {
   await status('checking for existing DID...')
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
-  const identifier = Did.DidUtils.getKiltDidFromIdentifier(
+
+  const didUri = Did.Utils.getKiltDidFromIdentifier(
     encodeAddress(keypairs.authentication.publicKey, 38),
     'full'
   )
 
-  let didDoc = await Did.DidResolver.resolveDoc(identifier)
+  let didDoc = await Did.DidResolver.resolveDoc(didUri)
 
   if (didDoc) {
     await status('DID loaded from chain...')
@@ -116,7 +119,7 @@ export async function getDidDoc(account, keypairs, network) {
       publicKey: keypairs.assertion.publicKey,
       type: VerificationKeyType.Sr25519,
     })
-    .consumeWithHandler(
+    .buildAndSubmit(
       {
         async sign({ data, alg }) {
           const { authentication } = keypairs
@@ -135,8 +138,7 @@ export async function getDidDoc(account, keypairs, network) {
       }
     )
 
-  await status('DID created on chain...')
-  return Did.DidResolver.resolveDoc(identifier)
+  return Did.DidResolver.resolveDoc(didUri)
 }
 
 export async function getAllSocialCTypes(didDoc, account, keypairs) {
@@ -232,7 +234,7 @@ export async function getAllSocialCTypes(didDoc, account, keypairs) {
   if (ctypeTx.length > 0) {
     const batch = await new Did.DidBatchBuilder(api, didDoc.details)
       .addMultipleExtrinsics(ctypeTx)
-      .consume(
+      .build(
         {
           async sign({ data, alg }) {
             const { assertion } = keypairs
@@ -257,33 +259,34 @@ export async function getAllSocialCTypes(didDoc, account, keypairs) {
 export async function attestClaim(claims, account, keypairs) {
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
-  const fullDid = await Did.FullDidDetails.fromChainInfo(
-    encodeAddress(keypairs.authentication.publicKey, 38)
+
+  const didUri = Did.Utils.getKiltDidFromIdentifier(
+    encodeAddress(keypairs.authentication.publicKey, 38),
+    'full'
   )
+  const fullDid = await Did.FullDidDetails.fromChainInfo(didUri)
   let requests = []
   const batchTx = await Promise.all(
     claims.map(async ({ claim }) => {
       const request = RequestForAttestation.fromClaim(claim)
 
-      const { signature, keyId } = await fullDid.signPayload(
-        Utils.Crypto.coToUInt8(request.rootHash),
+      const selfSignedRequest = await request.signWithDidKey(
         {
           async sign({ data, alg }) {
-            const { assertion } = keypairs
+            const { authentication } = keypairs
             return {
-              data: assertion.sign(data, { withType: false }),
+              data: authentication.sign(data, { withType: false }),
               alg,
             }
           },
         },
-        fullDid.getVerificationKeys(KeyRelationship.assertionMethod)[0].id
+        fullDid,
+        fullDid.getVerificationKeys(KeyRelationship.authentication)[0].id
       )
-
-      const selfSignedRequest = await request.addSignature(signature, keyId)
 
       const attestation = Attestation.fromRequestAndDid(
         selfSignedRequest,
-        fullDid.did
+        fullDid.uri
       )
       requests.push(selfSignedRequest)
       const attested = Boolean(await Attestation.query(attestation.claimHash))
@@ -296,7 +299,7 @@ export async function attestClaim(claims, account, keypairs) {
   if (batchTx.filter((val) => val !== true)) {
     const batch = await new Did.DidBatchBuilder(api, fullDid)
       .addMultipleExtrinsics(batchTx)
-      .consume(
+      .build(
         {
           async sign({ data, alg }) {
             const { assertion } = keypairs
