@@ -138,6 +138,7 @@ export async function getDidDoc(account, keypairs, network) {
       }
     )
 
+  await status('DID created on chain...')
   return Did.DidResolver.resolveDoc(didUri)
 }
 

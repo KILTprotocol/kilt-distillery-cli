@@ -153,7 +153,7 @@ async function getDomainLinkCredential(keypairs, origin, account) {
     selfSignedRequest,
     fullDid.uri
   )
-  await status(attestation)
+
   const attested = Boolean(await Attestation.query(attestation.claimHash))
   if (attested) return null
 
