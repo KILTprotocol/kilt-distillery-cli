@@ -138,15 +138,15 @@ async function getDomainLinkCredential(keypairs, origin, account) {
   const selfSignedRequest = await request.signWithDidKey(
     {
       async sign({ data, alg }) {
-        const { authentication } = keypairs
+        const { assertion } = keypairs
         return {
-          data: authentication.sign(data, { withType: false }),
+          data: assertion.sign(data, { withType: false }),
           alg,
         }
       },
     },
     fullDid,
-    fullDid.getVerificationKeys(KeyRelationship.authentication)[0].id
+    fullDid.getVerificationKeys(KeyRelationship.assertionMethod)[0].id
   )
 
   const attestation = Attestation.fromRequestAndDid(
@@ -204,7 +204,7 @@ async function getDidConfiguration(credential) {
   const proof = {
     type: KILT_SELF_SIGNED_PROOF_TYPE,
     proofPurpose: 'assertionMethod',
-    verificationMethod: claimerSignature.keyId,
+    verificationMethod: claimerSignature.keyUri,
     signature: claimerSignature.signature,
     challenge: claimerSignature.challenge,
   }
