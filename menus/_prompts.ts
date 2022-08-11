@@ -1,12 +1,14 @@
-import inquirer from 'inquirer'
+import inquirer, { Answers, QuestionCollection } from 'inquirer'
 import chalk from 'chalk'
 import { mnemonicValidate } from '@polkadot/util-crypto'
 import PressToContinuePrompt from 'inquirer-press-to-continue'
 import projects from './projects/index.js'
+import { InstanceType } from '@kiltprotocol/sdk-js'
+import * as validUrl from 'valid-url'
 
 inquirer.registerPrompt('press-to-continue', PressToContinuePrompt)
 
-async function prompt(prompt) {
+async function prompt(prompt: QuestionCollection<Answers>) {
   console.clear()
   return await inquirer.prompt({
     ...prompt,
@@ -14,7 +16,10 @@ async function prompt(prompt) {
   })
 }
 
-export async function status(msg, opts = {}) {
+export async function status(
+  msg: unknown,
+  opts: { wait: number; keyPress: boolean }
+) {
   return new Promise(async (resolve) => {
     const { wait = 500, keyPress = false } = opts
     const message = chalk.bold(` KILT DISTILLERY CLI - ${chalk.reset(msg)}`)
@@ -27,7 +32,7 @@ export async function status(msg, opts = {}) {
     await inquirer.prompt({
       name: 'key',
       type: 'press-to-continue',
-      message: message,
+      message,
       anyKey: true,
     })
 
@@ -44,7 +49,7 @@ export async function mainMenu() {
       choices: [
         { name: 'create project from recipe', value: 'createProject' },
         { name: 'setup claimer test credential', value: 'setupClaimer' },
-        //{ name: 'setup verifier assets', value: 'setupVerifier' },
+        // { name: 'setup verifier assets', value: 'setupVerifier' },
         { name: 'exit', value: 'exitCLI' },
       ],
     })
@@ -125,7 +130,10 @@ export async function getRecipeProject() {
     ],
   })
 
-  if (project === 'cancel') return null
+  if (project === 'cancel') {
+    return null
+  }
+
   return projects[project]
 }
 
@@ -161,19 +169,19 @@ export async function getDappName() {
     await prompt({
       type: 'input',
       name: 'dappName',
-      message: "what's the dapp's name?",
+      message: 'what\'s the dapp\'s name?',
     })
   ).dappName
 }
 
-export async function getClaimDetails(object) {
-  const question = Object.keys(object).map((val) => {
-    return {
-      type: 'input',
-      name: `${val}`,
-      message: `Please enter claim details ${val}?`,
-    }
-  })
+export async function getClaimDetails(object: {
+  [x: string]: { $ref?: string; type?: InstanceType; format?: string }
+}) {
+  const question = Object.keys(object).map((val) => ({
+    type: 'input',
+    name: `${val}`,
+    message: `Please enter claim details ${val}?`,
+  }))
   return inquirer.prompt(question)
 }
 

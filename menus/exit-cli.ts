@@ -1,4 +1,4 @@
 export default function () {
-  console.clear() 
+  console.clear()
   process.exit()
 }

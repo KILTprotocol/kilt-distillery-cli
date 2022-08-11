@@ -1,4 +1,4 @@
-import { Claim, init, ChainHelpers } from '@kiltprotocol/sdk-js'
+import { Claim, init, ChainHelpers, ICredential } from '@kiltprotocol/sdk-js'
 import { getMnemonic, status, getClaimDetails } from './_prompts.js'
 import mainMenu from './main-menu.js'
 import {
@@ -18,13 +18,13 @@ async function connect() {
   await init({ address: 'wss://peregrine.kilt.io/parachain-public-ws' })
 }
 
-// to do: give each credential the correct name
+// To do: give each credential the correct name
 // Make the objects similar to the sporran object
-function saveAssets(credentials) {
+function saveAssets(credentials: ICredential[]) {
   const directory = `${process.cwd()}/claimer-credentials`
   fs.rmSync(directory, { recursive: true, force: true })
   fs.mkdirSync(directory)
-  credentials.forEach((credential) => {
+  credentials.forEach((credential: ICredential) => {
     fs.writeFileSync(
       `${directory}/${credential.name}.json`,
       JSON.stringify(credential, null, 2),

@@ -1,7 +1,7 @@
-import { randomAsHex } from "@polkadot/util-crypto"
-import { getDappName, getJWTExpiry, getJWTRenewal, getNetwork, status } from "../_prompts.js"
-import fs from "fs-extra"
-import { exec } from "child_process"
+import {randomAsHex} from '@polkadot/util-crypto'
+import {getDappName, getJWTExpiry, getJWTRenewal, getNetwork, status} from '../_prompts.js'
+import fs from 'fs-extra'
+import {exec} from 'child_process'
 
 export default async function () {
   const network = await getNetwork()
@@ -22,7 +22,7 @@ export default async function () {
 
   status('initializing project...')
   process.chdir(dappName)
-  exec("yarn init -y", () => {
+  exec('yarn init -y', () => {
     status('installing dependencies...')
     exec('yarn install', () => {
       status('building...')
@@ -31,5 +31,5 @@ export default async function () {
         process.exit()
       })
     })
-  });
+  })
 }

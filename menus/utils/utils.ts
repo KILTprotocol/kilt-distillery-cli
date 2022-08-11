@@ -10,6 +10,14 @@ import {
   KeyRelationship,
   VerificationKeyType,
   EncryptionKeyType,
+  KeyringPair,
+  IIdentity,
+  KeyringPair,
+  DidResolutionDocumentMetadata,
+  IIdentity,
+  KeyringPair,
+  IIdentity,
+  KeyringPair,
 } from '@kiltprotocol/sdk-js'
 import {
   sr25519PairFromSeed,
@@ -26,7 +34,7 @@ import chalk from 'chalk'
 
 export const resolveOn = BlockchainUtils.IS_FINALIZED
 
-export async function loadAccount(seed) {
+export async function loadAccount(seed: string) {
   await status('loading account...')
   const signingKeyPairType = 'sr25519'
   const keyring = new Utils.Keyring({
@@ -37,7 +45,7 @@ export async function loadAccount(seed) {
   return account
 }
 
-export async function getKeypairs(account, mnemonic) {
+export async function getKeypairs(account: KeyringPair, mnemonic: string) {
   await status('generating keypairs...')
   await cryptoWaitReady()
   const keypairs = {
@@ -66,7 +74,24 @@ export async function getKeypairs(account, mnemonic) {
   }
 }
 
-export async function getDidDoc(account, keypairs, network) {
+export async function getDidDoc(
+  account: KeyringPair | IIdentity,
+  keypairs: {
+    relationships?: {
+      authentication: KeyringPair
+      assertionMethod: KeyringPair
+      keyAgreement: {
+        type: string
+        publicKey: Uint8Array
+        secretKey: Uint8Array
+      }
+    }
+    authentication: KeyringPair
+    assertion?: KeyringPair
+    keyAgreement?: KeyringPair
+  },
+  network: string | string[]
+) {
   await status('checking for existing DID...')
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
@@ -76,7 +101,7 @@ export async function getDidDoc(account, keypairs, network) {
     'full'
   )
 
-  let didDoc = await Did.DidResolver.resolveDoc(didUri)
+  const didDoc = await Did.DidResolver.resolveDoc(didUri)
 
   if (didDoc) {
     await status('DID loaded from chain...')
@@ -92,11 +117,11 @@ export async function getDidDoc(account, keypairs, network) {
   if (balance < 3) {
     const message = testnet
       ? chalk.red(
-          `get testnet tokens to continue => https://faucet.peregrine.kilt.io/?${account.address}`
-        )
+        `get testnet tokens to continue => https://faucet.peregrine.kilt.io/?${account.address}`
+      )
       : chalk.red(
-          `balance too low... to continue send 3 or more KILT to: ${account.address}`
-        )
+        `balance too low... to continue send 3 or more KILT to: ${account.address}`
+      )
 
     await status(message)
     while (balance < 3) {
@@ -142,8 +167,29 @@ export async function getDidDoc(account, keypairs, network) {
   return Did.DidResolver.resolveDoc(didUri)
 }
 
-export async function getAllSocialCTypes(didDoc, account, keypairs) {
-  let ctypeTx = []
+export async function getAllSocialCTypes(
+  didDoc: { details: any; metadata?: DidResolutionDocumentMetadata },
+  account: KeyringPair | IIdentity,
+  keypairs: {
+    relationships?: {
+      authentication: any
+      assertionMethod: any
+      keyAgreement: {
+        type: string
+        publicKey: Uint8Array
+        secretKey: Uint8Array
+      }
+    }
+    authentication?: any
+    assertion: any
+    keyAgreement?: {
+      type: string
+      publicKey: Uint8Array
+      secretKey: Uint8Array
+    }
+  }
+) {
+  const ctypeTx = []
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
   const githubCType = CType.fromSchema({
@@ -257,7 +303,28 @@ export async function getAllSocialCTypes(didDoc, account, keypairs) {
   return { githubCType, discordCType, emailCType, twitchCType, twitterCType }
 }
 
-export async function attestClaim(claims, account, keypairs) {
+export async function attestClaim(
+  claims: { ctype: any }[] | { claim: any }[],
+  account: KeyringPair | IIdentity,
+  keypairs: {
+    relationships?: {
+      authentication: any
+      assertionMethod: any
+      keyAgreement: {
+        type: string
+        publicKey: Uint8Array
+        secretKey: Uint8Array
+      }
+    }
+    authentication?: any
+    assertion?: any
+    keyAgreement?: {
+      type: string
+      publicKey: Uint8Array
+      secretKey: Uint8Array
+    }
+  }
+): Promise<> {
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
 
@@ -266,7 +333,7 @@ export async function attestClaim(claims, account, keypairs) {
     'full'
   )
   const fullDid = await Did.FullDidDetails.fromChainInfo(didUri)
-  let requests = []
+  const requests: RequestForAttestation[] = []
   const batchTx = await Promise.all(
     claims.map(async ({ claim }) => {
       const request = RequestForAttestation.fromClaim(claim)
@@ -291,7 +358,9 @@ export async function attestClaim(claims, account, keypairs) {
       )
       requests.push(selfSignedRequest)
       const attested = Boolean(await Attestation.query(attestation.claimHash))
-      if (attested) return null
+      if (attested) {
+        return null
+      }
 
       return attestation.getStoreTx()
     })

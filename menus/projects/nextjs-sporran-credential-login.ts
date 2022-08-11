@@ -34,7 +34,9 @@ export default async function (dappName) {
 
   if (!network.startsWith('wss://spiritnet')) {
     const needClaimer = await createTestCredentials()
-    if (needClaimer) await setupClaimer()
+    if (needClaimer) {
+      await setupClaimer()
+    }
   }
 
   await status(
