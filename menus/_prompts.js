@@ -30,7 +30,7 @@ export async function status(msg, opts = {}) {
       message: message,
       anyKey: true,
     })
-    
+
     resolve()
   })
 }
@@ -134,7 +134,8 @@ export async function getJWTExpiry() {
     await prompt({
       type: 'input',
       name: 'expiry',
-      message: 'how long should JWT be valid units of time? Example, 1 day or 2 hours',
+      message:
+        'how long should JWT be valid units of time? Example, 1 day or 2 hours:',
     })
   ).expiry
 }
