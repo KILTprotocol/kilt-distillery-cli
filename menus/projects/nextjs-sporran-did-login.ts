@@ -1,6 +1,6 @@
 import {randomAsHex} from '@polkadot/util-crypto'
 import {getDappName, getJWTExpiry, getJWTRenewal, getNetwork, status} from '../_prompts.js'
-import fs from 'fs-extra'
+import * as fs from 'fs-extra'
 import {exec} from 'child_process'
 
 export default async function () {

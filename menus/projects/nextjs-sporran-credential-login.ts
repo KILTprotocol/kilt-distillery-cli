@@ -7,10 +7,10 @@ import {
 import setupVerifier from '../setup-verifier.js'
 import { randomAsHex } from '@polkadot/util-crypto'
 import setupClaimer from '../setup-claimer.js'
-import fs from 'fs-extra'
+import * as fs from 'fs-extra'
 import exitCli from '../exit-cli.js'
 
-export default async function (dappName) {
+export default async function (dappName: any) {
   const jwtSecret = randomAsHex(16)
   const jwtExpiry = await getJWTExpiry()
   const renewJwt = await getJWTRenewal()

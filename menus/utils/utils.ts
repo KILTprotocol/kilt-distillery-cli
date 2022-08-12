@@ -10,14 +10,10 @@ import {
   KeyRelationship,
   VerificationKeyType,
   EncryptionKeyType,
-  KeyringPair,
-  IIdentity,
-  KeyringPair,
   DidResolutionDocumentMetadata,
   IIdentity,
   KeyringPair,
-  IIdentity,
-  KeyringPair,
+  IRequestForAttestation,
 } from '@kiltprotocol/sdk-js'
 import {
   sr25519PairFromSeed,
@@ -324,7 +320,16 @@ export async function attestClaim(
       secretKey: Uint8Array
     }
   }
-): Promise<> {
+): Promise<
+  Array<{
+    attester: string
+    cTypeTitle: string
+    isDownloaded: boolean
+    name: string
+    request: IRequestForAttestation
+    attested: boolean
+  }>
+> {
   const { api } =
     await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
 

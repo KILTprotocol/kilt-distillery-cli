@@ -1,5 +1,10 @@
-import {ChainHelpers, init} from '@kiltprotocol/sdk-js'
-import {mnemonicGenerate, cryptoWaitReady} from '@polkadot/util-crypto'
+import {
+  ChainHelpers,
+  DidResolutionDocumentMetadata,
+  init,
+  KeyringPair,
+} from '@kiltprotocol/sdk-js'
+import { mnemonicGenerate, cryptoWaitReady } from '@polkadot/util-crypto'
 import {
   getMnemonic,
   useExisting,
@@ -7,9 +12,9 @@ import {
   getOrigin,
   status,
 } from './_prompts.js'
-import {getDidDoc, getKeypairs, loadAccount} from './utils/utils.js'
+import { getDidDoc, getKeypairs, loadAccount } from './utils/utils.js'
 import chalk from 'chalk'
-import fs from 'fs'
+import * as fs from 'fs'
 import mainMenu from './main-menu.js'
 
 /**
@@ -18,10 +23,10 @@ import mainMenu from './main-menu.js'
  * - verifier mnemonic
  */
 
-export default async function ({returnAssets = false} = {}) {
+export default async function ({ returnAssets = false } = {}) {
   const network = await getNetwork()
-  const testnet
-    = network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
+  const testnet =
+    network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
 
   const mnemonic = testnet
     ? (await useExisting())
@@ -40,7 +45,7 @@ export default async function ({returnAssets = false} = {}) {
     mnemonic,
     account,
     didDoc,
-    origin,
+    origin
   )
 
   if (returnAssets) {
@@ -57,25 +62,28 @@ export default async function ({returnAssets = false} = {}) {
   await saveAssets(dotenv)
   await status(
     `Done! Assets saved to /verifier-assets\n${chalk.reset.gray(
-      '... press any key to return to main menu',
+      '... press any key to return to main menu'
     )}`,
-    {keyPress: true},
+    {
+      keyPress: true,
+      wait: 0,
+    }
   )
   return mainMenu()
 }
 
-async function connect(network) {
+async function connect(network: any) {
   await status('connecting to network...')
   await cryptoWaitReady()
-  await init({address: network})
+  await init({ address: network })
 }
 
 async function getEnvironmentVariables(
-  network,
-  mnemonic,
-  account,
-  didDoc,
-  origin,
+  network: any,
+  mnemonic: any,
+  account: KeyringPair,
+  didDoc: { details: any; metadata?: DidResolutionDocumentMetadata },
+  origin: any
 ) {
   await status('Building environment variables...')
   let dotenv = ''
@@ -87,10 +95,10 @@ async function getEnvironmentVariables(
   return dotenv
 }
 
-async function saveAssets(dotenv) {
+async function saveAssets(dotenv: string) {
   await status('Generating Verifier assets...')
   const directory = `${process.cwd()}/verifier-assets`
-  fs.rmSync(directory, {recursive: true, force: true})
+  fs.rmSync(directory, { recursive: true, force: true })
   fs.mkdirSync(directory)
   fs.writeFileSync(`${directory}/.env`, dotenv, 'utf-8')
   return true

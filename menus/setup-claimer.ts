@@ -1,5 +1,5 @@
 import { Claim, init, ChainHelpers, ICredential } from '@kiltprotocol/sdk-js'
-import { getMnemonic, status, getClaimDetails } from './_prompts.js'
+import { status, getClaimDetails } from './_prompts.js'
 import mainMenu from './main-menu.js'
 import {
   getAllSocialCTypes,
@@ -10,7 +10,7 @@ import {
 } from './utils/utils.js'
 
 import chalk from 'chalk'
-import fs from 'fs'
+import * as fs from 'fs'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
 
 async function connect() {

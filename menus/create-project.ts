@@ -14,7 +14,7 @@ async function downloadRecipe(repository: string, directory: any) {
   })
 }
 
-export default async function () {
+export default async function (): Promise<void> {
   const project = await getRecipeProject()
   if (!project) {
     return await mainMenu()
@@ -26,7 +26,7 @@ export default async function () {
   if (!result.ok) {
     await status('error downloading files... press any key to exit', {
       keyPress: true,
-      wait: 0
+      wait: 0,
     })
     return exitCli()
   }
