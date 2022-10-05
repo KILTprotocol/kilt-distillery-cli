@@ -9,8 +9,9 @@
     "build": "tsc build"
   },
   "dependencies": {
-    "@kiltprotocol/sdk-js": "0.28.0",
-    "@polkadot/util-crypto": "^9.6.2",
+    "@kiltprotocol/sdk-js": "0.29.0-rc.2",
+    "@kiltprotocol/types": "0.29.0-rc.2",
+    "@polkadot/util-crypto": "^10.1.9",
     "archiver": "^5.3.0",
     "chalk": "^5.0.0",
     "download-git-repo": "^3.0.2",
@@ -22,14 +23,14 @@
     "valid-url": "^1.0.9"
   },
   "resolutions": {
-    "@polkadot/keyring": "9.6.2",
-    "@polkadot/networks": "9.6.2",
-    "@polkadot/util-crypto": "9.6.2",
-    "@polkadot/util": "9.6.2",
-    "@polkadot/x-global": "9.6.2",
-    "@polkadot/x-randomvalues": "9.6.2",
-    "@polkadot/x-textdecoder": "9.6.2",
-    "@polkadot/x-textencoder": "9.6.2"
+    "@polkadot/keyring": "10.1.9",
+    "@polkadot/networks": "10.1.9",
+    "@polkadot/util-crypto": "10.1.9",
+    "@polkadot/util": "10.1.9",
+    "@polkadot/x-global": "10.1.9",
+    "@polkadot/x-randomvalues": "10.1.9",
+    "@polkadot/x-textdecoder": "10.1.9",
+    "@polkadot/x-textencoder": "10.1.9"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",

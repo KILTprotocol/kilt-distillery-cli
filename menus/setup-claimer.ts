@@ -1,4 +1,4 @@
-import { Claim, init, ChainHelpers, ICredential } from '@kiltprotocol/sdk-js'
+import { Claim, init, Credential, ICredential } from '@kiltprotocol/sdk-js'
 import { status, getClaimDetails } from './_prompts.js'
 import mainMenu from './main-menu.js'
 import {
@@ -12,6 +12,7 @@ import {
 import chalk from 'chalk'
 import * as fs from 'fs'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
+import { Presentation } from '../types/types.js'
 
 async function connect() {
   await status('connecting to network...')
@@ -20,14 +21,14 @@ async function connect() {
 
 // To do: give each credential the correct name
 // Make the objects similar to the sporran object
-function saveAssets(credentials: ICredential[]) {
+function saveAssets(credentials: Array<Presentation>) {
   const directory = `${process.cwd()}/claimer-credentials`
   fs.rmSync(directory, { recursive: true, force: true })
   fs.mkdirSync(directory)
-  credentials.forEach((credential: ICredential) => {
+  credentials.forEach((presentation: Presentation) => {
     fs.writeFileSync(
-      `${directory}/${credential.name}.json`,
-      JSON.stringify(credential, null, 2),
+      `${directory}/${presentation.name}.json`,
+      JSON.stringify(presentation, null, 2),
       'utf-8'
     )
   })
@@ -36,7 +37,6 @@ function saveAssets(credentials: ICredential[]) {
 export default async function () {
   await connect()
   const mnemonic = mnemonicGenerate()
-  await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
   const didDoc = await getDidDoc(
@@ -74,46 +74,62 @@ export default async function () {
   const githubClaim = Claim.fromCTypeAndClaimContents(
     githubCType,
     githubClaimContents,
-    didDoc.details.uri
+    didDoc.uri
   )
   const twitchClaim = Claim.fromCTypeAndClaimContents(
     twitchCType,
     twitchClaimContents,
-    didDoc.details.uri
+    didDoc.uri
   )
   const twitterClaim = Claim.fromCTypeAndClaimContents(
     twitterCType,
     twitterClaimContents,
-    didDoc.details.uri
+    didDoc.uri
   )
   const emailClaim = Claim.fromCTypeAndClaimContents(
     emailCType,
     emailClaimContents,
-    didDoc.details.uri
+    didDoc.uri
   )
   const discordClaim = Claim.fromCTypeAndClaimContents(
     discordCType,
     discordClaimContents,
-    didDoc.details.uri
+    didDoc.uri
   )
 
-  const claims = [
-    { ctype: 'peregrine github', claim: githubClaim },
-    { ctype: 'peregrine twitch', claim: twitchClaim },
-    { ctype: 'peregrine twitter', claim: twitterClaim },
-    { ctype: 'peregrine email', claim: emailClaim },
-    { ctype: 'peregrine discord', claim: discordClaim },
+  const credentials = [
+    {
+      ctype: 'peregrine github',
+      credential: Credential.fromClaim(githubClaim),
+    },
+    {
+      ctype: 'peregrine twitch',
+      credential: Credential.fromClaim(twitchClaim),
+    },
+    {
+      ctype: 'peregrine twitter',
+      credential: Credential.fromClaim(twitterClaim),
+    },
+    { ctype: 'peregrine email', credential: Credential.fromClaim(emailClaim) },
+    {
+      ctype: 'peregrine discord',
+      credential: Credential.fromClaim(discordClaim),
+    },
   ]
 
   await status('Self-attesting the claims...')
-  const credentials = await attestClaim(claims, account, keypairs)
+  const credentialPresentations = await attestClaim(
+    credentials,
+    account,
+    keypairs
+  )
 
   await status('Generating claimer credentials assets...')
-  saveAssets(credentials)
+  saveAssets(credentialPresentations)
 
   fs.writeFileSync(
     `${process.cwd()}/claimer-credentials/.env`,
-    `CLAIMER_MNEMONIC=${mnemonic}\nCLAIMER_DID=${didDoc.details.uri}`,
+    `CLAIMER_MNEMONIC=${mnemonic}\nCLAIMER_DID=${didDoc.uri}`,
     'utf-8'
   )
 

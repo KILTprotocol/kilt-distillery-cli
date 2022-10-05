@@ -1,5 +1,6 @@
 import {
   ChainHelpers,
+  DidDocument,
   DidResolutionDocumentMetadata,
   init,
   KeyringPair,
@@ -36,7 +37,6 @@ export default async function ({ returnAssets = false } = {}) {
 
   const origin = await getOrigin()
   await connect(network)
-  await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
   const didDoc = await getDidDoc(account, keypairs, network)
@@ -54,7 +54,7 @@ export default async function ({ returnAssets = false } = {}) {
       origin,
       mnemonic,
       address: account.address,
-      didUri: didDoc.details.uri,
+      didUri: didDoc.uri,
       dotenv,
     }
   }
@@ -82,7 +82,7 @@ async function getEnvironmentVariables(
   network: any,
   mnemonic: any,
   account: KeyringPair,
-  didDoc: { details: any; metadata?: DidResolutionDocumentMetadata },
+  didDoc: DidDocument,
   origin: any
 ) {
   await status('Building environment variables...')
@@ -91,7 +91,7 @@ async function getEnvironmentVariables(
   dotenv += `WSS_ADDRESS=${network}\n`
   dotenv += `VERIFIER_MNEMONIC=${mnemonic}\n`
   dotenv += `VERIFIER_ADDRESS=${account.address}\n`
-  dotenv += `VERIFIER_DID_URI=${didDoc.details.uri}`
+  dotenv += `VERIFIER_DID_URI=${didDoc.uri}`
   return dotenv
 }
 

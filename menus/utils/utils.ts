@@ -1,34 +1,42 @@
 import {
   ChainHelpers,
-  RequestForAttestation,
   Did,
-  Attestation,
-  Balance,
   CType,
-  BlockchainUtils,
   Utils,
-  KeyRelationship,
-  VerificationKeyType,
-  EncryptionKeyType,
-  DidResolutionDocumentMetadata,
-  IIdentity,
   KeyringPair,
-  IRequestForAttestation,
+  KiltKeyringPair,
+  NewDidEncryptionKey,
+  ConfigService,
+  Blockchain,
+  KiltAddress,
+  ICType,
+  DidDocument,
+  Attestation,
+  ICredential,
 } from '@kiltprotocol/sdk-js'
+
 import {
-  sr25519PairFromSeed,
   mnemonicToMiniSecret,
   keyExtractPath,
   keyFromPath,
   blake2AsU8a,
-  encodeAddress,
   naclBoxPairFromSecret,
-  cryptoWaitReady,
+  sr25519PairFromSeed,
 } from '@polkadot/util-crypto'
 import { status } from '../_prompts.js'
 import chalk from 'chalk'
+import { Keypair } from '@polkadot/util-crypto/types.js'
+import { Presentation } from '../../types/types'
 
-export const resolveOn = BlockchainUtils.IS_FINALIZED
+export async function isCtypeOnChain(ctype: ICType): Promise<boolean> {
+  try {
+    await CType.verifyStored(ctype)
+    return true
+  } catch {
+    return false
+  }
+}
+export const resolveOn = ChainHelpers.Blockchain.IS_FINALIZED
 
 export async function loadAccount(seed: string) {
   await status('loading account...')
@@ -42,152 +50,105 @@ export async function loadAccount(seed: string) {
 }
 
 export async function getKeypairs(account: KeyringPair, mnemonic: string) {
-  await status('generating keypairs...')
-  await cryptoWaitReady()
-  const keypairs = {
-    authentication: account.derive('//did//0'),
-    assertion: account.derive('//did//assertion//0'),
-    keyAgreement: (function () {
-      const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic))
-      const { path } = keyExtractPath('//did//keyAgreement//0')
-      const { secretKey } = keyFromPath(secretKeyPair, path, 'sr25519')
-      const blake = blake2AsU8a(secretKey)
-      const boxPair = naclBoxPairFromSecret(blake)
-      return {
-        ...boxPair,
-        type: 'x25519',
-      }
-    })(),
-  }
+  const authentication = {
+    ...account.derive('//did//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair
+  const assertion = {
+    ...account.derive('//did//assertion//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair
+  const keyAgreement: NewDidEncryptionKey & Keypair = (function () {
+    const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic))
+    const { path } = keyExtractPath('//did//keyAgreement//0')
+    const { secretKey } = keyFromPath(secretKeyPair, path, 'sr25519')
+    return {
+      ...naclBoxPairFromSecret(blake2AsU8a(secretKey)),
+      type: 'x25519',
+    }
+  })()
 
   return {
-    ...keypairs,
-    relationships: {
-      [KeyRelationship.authentication]: keypairs.authentication,
-      [KeyRelationship.assertionMethod]: keypairs.assertion,
-      [KeyRelationship.keyAgreement]: keypairs.keyAgreement,
-    },
+    authentication,
+    assertion,
+    keyAgreement,
   }
 }
 
 export async function getDidDoc(
-  account: KeyringPair | IIdentity,
-  keypairs: {
-    relationships?: {
-      authentication: KeyringPair
-      assertionMethod: KeyringPair
-      keyAgreement: {
-        type: string
-        publicKey: Uint8Array
-        secretKey: Uint8Array
-      }
-    }
-    authentication: KeyringPair
-    assertion?: KeyringPair
-    keyAgreement?: KeyringPair
-  },
+  account: KeyringPair,
+  keypairs,
   network: string | string[]
-) {
+): Promise<DidDocument> {
   await status('checking for existing DID...')
-  const { api } =
-    await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
+  const api = ConfigService.get('api')
 
-  const didUri = Did.Utils.getKiltDidFromIdentifier(
-    encodeAddress(keypairs.authentication.publicKey, 38),
-    'full'
-  )
+  const { authentication, assertion, keyAgreement } = keypairs
 
-  const didDoc = await Did.DidResolver.resolveDoc(didUri)
+  const didUri = Did.getFullDidUriFromKey(authentication)
 
-  if (didDoc) {
+  let didDoc = await Did.resolve(didUri)
+
+  if (didDoc && didDoc.document) {
     await status('DID loaded from chain...')
-    return didDoc
+    return didDoc.document
   }
 
   await status('checking balance...')
 
   const testnet = network.indexOf('peregrine') > 0
   let balance = parseInt(
-    (await Balance.getBalances(account.address)).free.toString()
+    (await api.query.system.account(account.address)).data.free.toString()
   )
   if (balance < 3) {
     const message = testnet
       ? chalk.red(
-        `get testnet tokens to continue => https://faucet.peregrine.kilt.io/?${account.address}`
-      )
+          `get testnet tokens to continue => https://faucet.peregrine.kilt.io/?${account.address}`
+        )
       : chalk.red(
-        `balance too low... to continue send 3 or more KILT to: ${account.address}`
-      )
+          `balance too low... to continue send 3 or more KILT to: ${account.address}`
+        )
 
     await status(message)
     while (balance < 3) {
       balance = parseInt(
-        (await Balance.getBalances(account.address)).free.toString()
+        (await api.query.system.account(account.address)).data.free.toString()
       )
       await new Promise((r) => setTimeout(r, 2000))
     }
   }
 
-  await new Did.FullDidCreationBuilder(api, {
-    publicKey: keypairs.authentication.publicKey,
-    type: VerificationKeyType.Sr25519,
-  })
-    .addEncryptionKey({
-      publicKey: keypairs.keyAgreement.publicKey,
-      type: EncryptionKeyType.X25519,
+  const extrinsic = await Did.getStoreTx(
+    {
+      authentication: [authentication],
+      assertionMethod: [assertion],
+      keyAgreement: [keyAgreement],
+    },
+    account.address as KiltAddress,
+    async ({ data }) => ({
+      data: authentication.sign(data),
+      keyType: authentication.type,
     })
-    .setAttestationKey({
-      publicKey: keypairs.assertion.publicKey,
-      type: VerificationKeyType.Sr25519,
-    })
-    .buildAndSubmit(
-      {
-        async sign({ data, alg }) {
-          const { authentication } = keypairs
-          return {
-            data: authentication.sign(data, { withType: false }),
-            alg,
-          }
-        },
-      },
-      account.address,
-      async (creationTx) => {
-        await BlockchainUtils.signAndSubmitTx(creationTx, account, {
-          reSign: true,
-          resolveOn,
-        })
-      }
-    )
+  )
 
+  await Blockchain.signAndSubmitTx(extrinsic, account, {
+    resolveOn: Blockchain.IS_FINALIZED,
+  })
+
+  didDoc = await Did.resolve(didUri)
+  if (!didDoc || !didDoc.document)
+    throw new Error('Could not fetch created DID document')
   await status('DID created on chain...')
-  return Did.DidResolver.resolveDoc(didUri)
+
+  return didDoc.document
 }
 
 export async function getAllSocialCTypes(
-  didDoc: { details: any; metadata?: DidResolutionDocumentMetadata },
-  account: KeyringPair | IIdentity,
-  keypairs: {
-    relationships?: {
-      authentication: any
-      assertionMethod: any
-      keyAgreement: {
-        type: string
-        publicKey: Uint8Array
-        secretKey: Uint8Array
-      }
-    }
-    authentication?: any
-    assertion: any
-    keyAgreement?: {
-      type: string
-      publicKey: Uint8Array
-      secretKey: Uint8Array
-    }
-  }
+  didDoc: DidDocument,
+  account: KeyringPair,
+  keypairs: any
 ) {
-  const ctypeTx = []
-  const { api } =
-    await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
+  const ctypeTx: string[] = []
   const githubCType = CType.fromSchema({
     $schema: 'http://kilt-protocol.org/draft-01/ctype#',
     title: 'GitHub',
@@ -202,8 +163,8 @@ export async function getAllSocialCTypes(
     type: 'object',
   })
 
-  if (!(await githubCType.verifyStored())) {
-    ctypeTx.push(await githubCType.getStoreTx())
+  if (!(await isCtypeOnChain(githubCType))) {
+    ctypeTx.push(CType.toChain(githubCType))
   }
 
   const discordCType = CType.fromSchema({
@@ -223,8 +184,8 @@ export async function getAllSocialCTypes(
     type: 'object',
   })
 
-  if (!(await discordCType.verifyStored())) {
-    ctypeTx.push(await discordCType.getStoreTx())
+  if (!(await isCtypeOnChain(discordCType))) {
+    ctypeTx.push(CType.toChain(discordCType))
   }
 
   const emailCType = CType.fromSchema({
@@ -238,8 +199,8 @@ export async function getAllSocialCTypes(
     type: 'object',
   })
 
-  if (!(await emailCType.verifyStored())) {
-    ctypeTx.push(await emailCType.getStoreTx())
+  if (!(await isCtypeOnChain(emailCType))) {
+    ctypeTx.push(CType.toChain(emailCType))
   }
 
   const twitchCType = CType.fromSchema({
@@ -255,8 +216,9 @@ export async function getAllSocialCTypes(
     },
     type: 'object',
   })
-  if (!(await twitchCType.verifyStored())) {
-    ctypeTx.push(await twitchCType.getStoreTx())
+
+  if (!(await isCtypeOnChain(twitchCType))) {
+    ctypeTx.push(CType.toChain(twitchCType))
   }
 
   const twitterCType = CType.fromSchema({
@@ -270,139 +232,73 @@ export async function getAllSocialCTypes(
     type: 'object',
   })
 
-  if (!(await twitterCType.verifyStored())) {
-    ctypeTx.push(await twitterCType.getStoreTx())
+  if (!(await isCtypeOnChain(twitterCType))) {
+    ctypeTx.push(CType.toChain(twitterCType))
   }
 
   if (ctypeTx.length > 0) {
-    const batch = await new Did.DidBatchBuilder(api, didDoc.details)
-      .addMultipleExtrinsics(ctypeTx)
-      .build(
-        {
-          async sign({ data, alg }) {
-            const { assertion } = keypairs
-            return {
-              data: assertion.sign(data, { withType: false }),
-              alg,
-            }
-          },
-        },
-        account.address
-      )
-
-    await BlockchainUtils.signAndSubmitTx(batch, account, {
-      reSign: true,
-      resolveOn,
-    })
+    console.log('')
   }
 
   return { githubCType, discordCType, emailCType, twitchCType, twitterCType }
 }
 
 export async function attestClaim(
-  claims: { ctype: any }[] | { claim: any }[],
-  account: KeyringPair | IIdentity,
-  keypairs: {
-    relationships?: {
-      authentication: any
-      assertionMethod: any
-      keyAgreement: {
-        type: string
-        publicKey: Uint8Array
-        secretKey: Uint8Array
-      }
-    }
-    authentication?: any
-    assertion?: any
-    keyAgreement?: {
-      type: string
-      publicKey: Uint8Array
-      secretKey: Uint8Array
-    }
-  }
-): Promise<
-  Array<{
-    attester: string
-    cTypeTitle: string
-    isDownloaded: boolean
-    name: string
-    request: IRequestForAttestation
-    attested: boolean
-  }>
-> {
-  const { api } =
-    await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
+  credentials: Array<{ ctype: string; credential: ICredential }>,
+  account: KiltKeyringPair,
+  keypairs: any
+): Promise<Array<Presentation>> {
+  const api = ConfigService.get('api')
 
-  const didUri = Did.Utils.getKiltDidFromIdentifier(
-    encodeAddress(keypairs.authentication.publicKey, 38),
-    'full'
-  )
-  const fullDid = await Did.FullDidDetails.fromChainInfo(didUri)
-  const requests: RequestForAttestation[] = []
+  const { authentication, assertion } = keypairs
+
+  const didUri = Did.getFullDidUriFromKey(authentication)
+
   const batchTx = await Promise.all(
-    claims.map(async ({ claim }) => {
-      const request = RequestForAttestation.fromClaim(claim)
-
-      const selfSignedRequest = await request.signWithDidKey(
-        {
-          async sign({ data, alg }) {
-            const { authentication } = keypairs
-            return {
-              data: authentication.sign(data, { withType: false }),
-              alg,
-            }
-          },
-        },
-        fullDid,
-        fullDid.getVerificationKeys(KeyRelationship.authentication)[0].id
+    credentials.map(async ({ credential }) => {
+      const { cTypeHash, claimHash } = Attestation.fromCredentialAndDid(
+        credential,
+        didUri
       )
 
-      const attestation = Attestation.fromRequestAndDid(
-        selfSignedRequest,
-        fullDid.uri
+      const tx = api.tx.attestation.add(claimHash, cTypeHash, null)
+      const extrinsic = await Did.authorizeExtrinsic(
+        didUri,
+        tx,
+        authentication.sign,
+        account.address
       )
-      requests.push(selfSignedRequest)
-      const attested = Boolean(await Attestation.query(attestation.claimHash))
-      if (attested) {
-        return null
-      }
 
-      return attestation.getStoreTx()
+      return extrinsic
     })
   )
 
   if (batchTx.filter((val) => val !== true)) {
-    const batch = await new Did.DidBatchBuilder(api, fullDid)
-      .addMultipleExtrinsics(batchTx)
-      .build(
-        {
-          async sign({ data, alg }) {
-            const { assertion } = keypairs
-            return {
-              data: assertion.sign(data, { withType: false }),
-              alg,
-            }
-          },
-        },
-        account.address
-      )
-
-    await BlockchainUtils.signAndSubmitTx(batch, account, {
-      reSign: true,
+    const batch = await Did.authorizeBatch({
+      batchFunction: api.tx.utility.batchAll,
+      did: didUri,
+      extrinsics: batchTx,
+      sign: assertion.sign,
+      submitter: account.address,
+    })
+    await Blockchain.signAndSubmitTx(batch, account, {
       resolveOn,
     })
   }
 
   return await Promise.all(
-    requests.map(async (request, index) => {
-      const attested = Boolean(await Attestation.query(request.rootHash))
+    credentials.map(async ({ credential, ctype }) => {
+      const api = ConfigService.get('api')
+      const attested = Boolean(
+        await api.query.attestation.attestations(credential.rootHash)
+      )
 
       return {
         attester: 'PeregrineSelfAttestedSocialKYC',
-        cTypeTitle: claims[index].ctype,
+        cTypeTitle: ctype,
         isDownloaded: true,
-        name: claims[index].ctype,
-        request: { ...request },
+        name: ctype,
+        credential: { ...credential },
         attested,
       }
     })

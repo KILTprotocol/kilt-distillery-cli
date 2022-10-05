@@ -169,7 +169,7 @@ export async function getDappName() {
     await prompt({
       type: 'input',
       name: 'dappName',
-      message: 'what\'s the dapp\'s name?',
+      message: "what's the dapp's name?",
     })
   ).dappName
 }

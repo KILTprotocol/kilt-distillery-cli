@@ -1,10 +1,10 @@
-import { IRequestForAttestation } from '@kiltprotocol/sdk-js'
+import { ICredential, IAttestation } from '@kiltprotocol/types'
 
-export type present = {
+export interface Presentation {
   attester: string
   cTypeTitle: string
   isDownloaded: boolean
-  name: any
-  request: IRequestForAttestation
+  name: string
+  credential: ICredential
   attested: boolean
 }

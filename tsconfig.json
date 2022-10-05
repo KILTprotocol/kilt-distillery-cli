@@ -1,13 +1,34 @@
 // tsconfig.json
 {
   "compilerOptions": {
-    "outDir": "dist", // where to put the compiled JS files
-    "target": "ES2020", // which level of JS support to target
-    "module": "CommonJS", // which system for the program AMD, UMD, System, CommonJS
-
-    // Recommended: Compiler complains about expressions implicitly typed as 'any'
-    "noImplicitAny": true
+    "target": "ESNext",
+    "outDir": "dist",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "module": "ESNext",
+    "noImplicitAny": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "noEmit": true
   },
-  "include": ["menus", "index.ts"], // which files to compile
-  "exclude": ["node_modules", "public", "tsconfig.json"] // which files to skip
+  "include": [
+    "menus/**/*.ts",
+    "./index.ts/**/*.ts"
+  ], // which files to compile
+  "exclude": [
+    "node_modules",
+    "public",
+    "tsconfig.json"
+  ] // which files to skip
 }
