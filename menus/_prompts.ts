@@ -12,16 +12,16 @@ async function prompt(prompt: QuestionCollection<Answers>) {
   console.clear()
   return await inquirer.prompt({
     ...prompt,
+    //@ts-ignore
     prefix: `${chalk.bold(' KILT CLI ')}-`,
   })
 }
 
 export async function status(
-  msg: unknown,
-  opts?: { wait: number; keyPress: boolean }
+  msg: string,
+  { wait = 500, keyPress = false }: { wait?: number; keyPress?: boolean } = {}
 ) {
   return new Promise<void>(async (resolve) => {
-    const { wait = 500, keyPress = false } = opts
     const message = chalk.bold(` KILT DISTILLERY CLI - ${chalk.reset(msg)}`)
     console.clear()
     if (!keyPress) {
@@ -30,6 +30,7 @@ export async function status(
     }
 
     await inquirer.prompt({
+      //@ts-ignore
       name: 'key',
       type: 'press-to-continue',
       message,

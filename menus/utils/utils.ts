@@ -13,6 +13,7 @@ import {
   DidDocument,
   Attestation,
   ICredential,
+  SignCallback,
 } from '@kiltprotocol/sdk-js'
 
 import {
@@ -26,7 +27,36 @@ import {
 import { status } from '../_prompts.js'
 import chalk from 'chalk'
 import { Keypair } from '@polkadot/util-crypto/types.js'
-import { Presentation } from '../../types/types'
+import { Keypairs, Presentation } from '../../types/types'
+
+export type KeyToolSignCallback = (didDocument: DidDocument) => SignCallback
+
+/**
+ * Generates a callback that can be used for signing.
+ *
+ * @param keypair The keypair to use for signing.
+ * @returns The callback.
+ */
+export function makeSignCallback(keypair: KeyringPair): KeyToolSignCallback {
+  return (didDocument) =>
+    //@ts-ignore
+    async function sign({ data, keyRelationship }) {
+      const keyId = didDocument[keyRelationship]?.[0].id
+      const keyType = didDocument[keyRelationship]?.[0].type
+      if (keyId === undefined || keyType === undefined) {
+        throw new Error(
+          `Key for purpose "${keyRelationship}" not found in did "${didDocument.uri}"`
+        )
+      }
+      const signature = keypair.sign(data, { withType: false })
+
+      return {
+        signature,
+        keyUri: `${didDocument.uri}${keyId}`,
+        keyType,
+      }
+    }
+}
 
 export async function isCtypeOnChain(ctype: ICType): Promise<boolean> {
   try {
@@ -38,18 +68,21 @@ export async function isCtypeOnChain(ctype: ICType): Promise<boolean> {
 }
 export const resolveOn = ChainHelpers.Blockchain.IS_FINALIZED
 
-export async function loadAccount(seed: string) {
+export async function loadAccount(seed: string): Promise<KiltKeyringPair> {
   await status('loading account...')
   const signingKeyPairType = 'sr25519'
   const keyring = new Utils.Keyring({
     ss58Format: 38,
     type: signingKeyPairType,
   })
-  const account = keyring.addFromMnemonic(seed)
+  const account = keyring.addFromMnemonic(seed) as KiltKeyringPair
   return account
 }
 
-export async function getKeypairs(account: KeyringPair, mnemonic: string) {
+export async function getKeypairs(
+  account: KeyringPair,
+  mnemonic: string
+): Promise<Keypairs> {
   const authentication = {
     ...account.derive('//did//0'),
     type: 'sr25519',
@@ -77,7 +110,7 @@ export async function getKeypairs(account: KeyringPair, mnemonic: string) {
 
 export async function getDidDoc(
   account: KeyringPair,
-  keypairs,
+  keypairs: Keypairs,
   network: string | string[]
 ): Promise<DidDocument> {
   await status('checking for existing DID...')
@@ -145,8 +178,8 @@ export async function getDidDoc(
 
 export async function getAllSocialCTypes(
   didDoc: DidDocument,
-  account: KeyringPair,
-  keypairs: any
+  account: KiltKeyringPair,
+  keypairs: Keypairs
 ) {
   const ctypeTx: string[] = []
   const githubCType = CType.fromSchema({
@@ -237,7 +270,52 @@ export async function getAllSocialCTypes(
   }
 
   if (ctypeTx.length > 0) {
-    console.log('')
+    const api = ConfigService.get('api')
+
+    const { authentication, assertion } = keypairs
+
+    const didUri = Did.getFullDidUriFromKey(authentication)
+
+    const didResolved = await Did.resolve(didUri)
+
+    if (!didResolved?.document) {
+      throw new Error('Document of resolved DID not found')
+    }
+
+    const assertionCallback = makeSignCallback(assertion)
+
+    const assertionSign = assertionCallback(didResolved.document)
+
+    await Promise.all(
+      ctypeTx.map(async (tx) => {
+        const ctypeCreationTx = api.tx.ctype.add(tx)
+        // Sign it with the right DID key
+        const extrinsic = await Did.authorizeExtrinsic(
+          didUri,
+          ctypeCreationTx,
+          assertionSign,
+          account.address
+        )
+
+        await Blockchain.signAndSubmitTx(extrinsic, account, {
+          resolveOn: Blockchain.IS_FINALIZED,
+        })
+      })
+    )
+
+    // DID batch authorize is currently not useable
+    // if (extrinsics.filter((val) => val)) {
+    //   const batch = await Did.authorizeBatch({
+    //     batchFunction: api.tx.utility.batchAll,
+    //     did: didUri,
+    //     extrinsics,
+    //     sign: assertionSign,
+    //     submitter: account.address,
+    //   })
+    //   await Blockchain.signAndSubmitTx(batch, account, {
+    //     resolveOn,
+    //   })
+    // }
   }
 
   return { githubCType, discordCType, emailCType, twitchCType, twitterCType }
@@ -246,7 +324,7 @@ export async function getAllSocialCTypes(
 export async function attestClaim(
   credentials: Array<{ ctype: string; credential: ICredential }>,
   account: KiltKeyringPair,
-  keypairs: any
+  keypairs: Keypairs
 ): Promise<Array<Presentation>> {
   const api = ConfigService.get('api')
 
@@ -254,7 +332,17 @@ export async function attestClaim(
 
   const didUri = Did.getFullDidUriFromKey(authentication)
 
-  const batchTx = await Promise.all(
+  const didResolved = await Did.resolve(didUri)
+
+  if (!didResolved?.document) {
+    throw new Error('Document of resolved DID not found')
+  }
+
+  const assertionCallback = makeSignCallback(assertion)
+
+  const assertionSign = assertionCallback(didResolved.document)
+
+  await Promise.all(
     credentials.map(async ({ credential }) => {
       const { cTypeHash, claimHash } = Attestation.fromCredentialAndDid(
         credential,
@@ -265,26 +353,29 @@ export async function attestClaim(
       const extrinsic = await Did.authorizeExtrinsic(
         didUri,
         tx,
-        authentication.sign,
+        assertionSign,
         account.address
       )
 
-      return extrinsic
+      await Blockchain.signAndSubmitTx(extrinsic, account, {
+        resolveOn: Blockchain.IS_FINALIZED,
+      })
     })
   )
 
-  if (batchTx.filter((val) => val !== true)) {
-    const batch = await Did.authorizeBatch({
-      batchFunction: api.tx.utility.batchAll,
-      did: didUri,
-      extrinsics: batchTx,
-      sign: assertion.sign,
-      submitter: account.address,
-    })
-    await Blockchain.signAndSubmitTx(batch, account, {
-      resolveOn,
-    })
-  }
+  // DID batch authorize is currently not useable
+  // if (extrinsics.filter((val) => Boolean(val) !== true)) {
+  //   const batch = await Did.authorizeBatch({
+  //     batchFunction: api.tx.utility.batchAll,
+  //     did: didUri,
+  //     extrinsics,
+  //     sign: assertionSign,
+  //     submitter: account.address,
+  //   })
+  //   await Blockchain.signAndSubmitTx(batch, account, {
+  //     resolveOn,
+  //   })
+  // }
 
   return await Promise.all(
     credentials.map(async ({ credential, ctype }) => {
@@ -298,7 +389,7 @@ export async function attestClaim(
         cTypeTitle: ctype,
         isDownloaded: true,
         name: ctype,
-        credential: { ...credential },
+        credential,
         attested,
       }
     })

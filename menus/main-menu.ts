@@ -11,12 +11,8 @@ const menus = {
   setupClaimer,
 }
 
-export default async function (): Promise<{
-  exitCLI: () => void
-  createProject: () => Promise<any>
-  setupVerifier: ({ returnAssets }?: { returnAssets?: boolean }) => Promise<any>
-  setupClaimer: () => Promise<any>
-}> {
+export default async function () {
   const action = await mainMenu()
+  //@ts-ignore
   return menus[action]()
 }

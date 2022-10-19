@@ -1,4 +1,9 @@
-import { ICredential, IAttestation } from '@kiltprotocol/types'
+import {
+  ICredential,
+  NewDidEncryptionKey,
+  KiltKeyringPair,
+} from '@kiltprotocol/types'
+import { Keypair } from '@polkadot/util-crypto/types.js'
 
 export interface Presentation {
   attester: string
@@ -7,4 +12,10 @@ export interface Presentation {
   name: string
   credential: ICredential
   attested: boolean
+}
+
+export interface Keypairs {
+  authentication: KiltKeyringPair
+  assertion: KiltKeyringPair
+  keyAgreement: NewDidEncryptionKey & Keypair
 }

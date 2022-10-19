@@ -1,10 +1,4 @@
-import {
-  ChainHelpers,
-  DidDocument,
-  DidResolutionDocumentMetadata,
-  init,
-  KeyringPair,
-} from '@kiltprotocol/sdk-js'
+import { DidDocument, init, KeyringPair } from '@kiltprotocol/sdk-js'
 import { mnemonicGenerate, cryptoWaitReady } from '@polkadot/util-crypto'
 import {
   getMnemonic,
@@ -24,7 +18,7 @@ import mainMenu from './main-menu.js'
  * - verifier mnemonic
  */
 
-export default async function ({ returnAssets = false } = {}) {
+export default async function ({ returnAssets = false } = {}): Promise<any> {
   const network = await getNetwork()
   const testnet =
     network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
@@ -72,7 +66,7 @@ export default async function ({ returnAssets = false } = {}) {
   return mainMenu()
 }
 
-async function connect(network: any) {
+async function connect(network: string) {
   await status('connecting to network...')
   await cryptoWaitReady()
   await init({ address: network })

@@ -1,4 +1,5 @@
 import { getDappName, getRecipeProject, mainMenu, status } from './_prompts.js'
+//@ts-ignore
 import download from 'download-git-repo'
 import exitCli from './exit-cli.js'
 
@@ -23,6 +24,7 @@ export default async function (): Promise<void> {
   const dappName = await getDappName()
   await status('downloading project files...')
   const result = await downloadRecipe(project.repo, dappName)
+  //@ts-ignore
   if (!result.ok) {
     await status('error downloading files... press any key to exit', {
       keyPress: true,

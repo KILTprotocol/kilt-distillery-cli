@@ -1,4 +1,4 @@
-import { Claim, init, Credential, ICredential } from '@kiltprotocol/sdk-js'
+import { Claim, init, Credential } from '@kiltprotocol/sdk-js'
 import { status, getClaimDetails } from './_prompts.js'
 import mainMenu from './main-menu.js'
 import {
@@ -34,7 +34,7 @@ function saveAssets(credentials: Array<Presentation>) {
   })
 }
 
-export default async function () {
+export default async function (): Promise<any> {
   await connect()
   const mnemonic = mnemonicGenerate()
   const account = await loadAccount(mnemonic)
