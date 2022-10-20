@@ -24,9 +24,9 @@ import {
   naclBoxPairFromSecret,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto'
-import { status } from '../_prompts.js'
+import { status } from '../_prompts'
 import chalk from 'chalk'
-import { Keypair } from '@polkadot/util-crypto/types.js'
+import { Keypair } from '@polkadot/util-crypto/types'
 import { Keypairs, Presentation } from '../../types/types'
 
 export type KeyToolSignCallback = (didDocument: DidDocument) => SignCallback

@@ -1,4 +1,4 @@
-import nextjsSporranCredentialLogin from './nextjs-sporran-credential-login.js'
+import nextjsSporranCredentialLogin from './nextjs-sporran-credential-login'
 
 export default [
   {

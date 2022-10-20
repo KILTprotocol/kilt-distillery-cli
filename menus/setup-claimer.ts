@@ -1,18 +1,18 @@
 import { Claim, init, Credential } from '@kiltprotocol/sdk-js'
-import { status, getClaimDetails } from './_prompts.js'
-import mainMenu from './main-menu.js'
+import { status, getClaimDetails } from './_prompts'
+import mainMenu from './main-menu'
 import {
   getAllSocialCTypes,
   attestClaim,
   loadAccount,
   getKeypairs,
   getDidDoc,
-} from './utils/utils.js'
+} from './utils/utils'
 
 import chalk from 'chalk'
 import * as fs from 'fs'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
-import { Presentation } from '../types/types.js'
+import { Presentation } from '../types/types'
 
 async function connect() {
   await status('connecting to network...')

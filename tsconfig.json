@@ -29,6 +29,7 @@
   "exclude": [
     "node_modules",
     "public",
-    "tsconfig.json"
+    "tsconfig.json",
+    "*/**/dist/**/*"
   ] // which files to skip
 }

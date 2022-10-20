@@ -3,7 +3,7 @@ import {
   NewDidEncryptionKey,
   KiltKeyringPair,
 } from '@kiltprotocol/types'
-import { Keypair } from '@polkadot/util-crypto/types.js'
+import { Keypair } from '@polkadot/util-crypto/types'
 
 export interface Presentation {
   attester: string

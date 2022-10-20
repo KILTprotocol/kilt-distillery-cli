@@ -3,12 +3,12 @@ import {
   getJWTExpiry,
   getJWTRenewal,
   createTestCredentials,
-} from '../_prompts.js'
-import setupVerifier from '../setup-verifier.js'
+} from '../_prompts'
+import setupVerifier from '../setup-verifier'
 import { randomAsHex } from '@polkadot/util-crypto'
-import setupClaimer from '../setup-claimer.js'
+import setupClaimer from '../setup-claimer'
 import * as fs from 'fs-extra'
-import exitCli from '../exit-cli.js'
+import exitCli from '../exit-cli'
 
 export default async function (dappName: any) {
   const jwtSecret = randomAsHex(16)

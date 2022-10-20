@@ -1,7 +1,7 @@
-import { getDappName, getRecipeProject, mainMenu, status } from './_prompts.js'
+import { getDappName, getRecipeProject, mainMenu, status } from './_prompts'
 //@ts-ignore
 import download from 'download-git-repo'
-import exitCli from './exit-cli.js'
+import exitCli from './exit-cli'
 
 async function downloadRecipe(repository: string, directory: any) {
   return new Promise((resolve, reject) => {

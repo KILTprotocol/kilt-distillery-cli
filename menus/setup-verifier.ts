@@ -6,11 +6,11 @@ import {
   getNetwork,
   getOrigin,
   status,
-} from './_prompts.js'
-import { getDidDoc, getKeypairs, loadAccount } from './utils/utils.js'
+} from './_prompts'
+import { getDidDoc, getKeypairs, loadAccount } from './utils/utils'
 import chalk from 'chalk'
 import * as fs from 'fs'
-import mainMenu from './main-menu.js'
+import mainMenu from './main-menu'
 
 /**
  * Setup verifier results in

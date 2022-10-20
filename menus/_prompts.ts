@@ -2,7 +2,7 @@ import inquirer, { Answers, QuestionCollection } from 'inquirer'
 import chalk from 'chalk'
 import { mnemonicValidate } from '@polkadot/util-crypto'
 import PressToContinuePrompt from 'inquirer-press-to-continue'
-import projects from './projects/index.js'
+import projects from './projects/index'
 import { InstanceType } from '@kiltprotocol/sdk-js'
 import * as validUrl from 'valid-url'
 

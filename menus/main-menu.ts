@@ -1,8 +1,8 @@
-import setupVerifier from './setup-verifier.js'
-import setupClaimer from './setup-claimer.js'
-import createProject from './create-project.js'
-import exitCLI from './exit-cli.js'
-import { mainMenu } from './_prompts.js'
+import setupVerifier from './setup-verifier'
+import setupClaimer from './setup-claimer'
+import createProject from './create-project'
+import exitCLI from './exit-cli'
+import { mainMenu } from './_prompts'
 
 const menus = {
   exitCLI,
