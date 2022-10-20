@@ -10,7 +10,7 @@ import setupClaimer from '../setup-claimer'
 import * as fs from 'fs-extra'
 import exitCli from '../exit-cli'
 
-export default async function (dappName: any) {
+export default async function (dappName: string) {
   const jwtSecret = randomAsHex(16)
   const jwtExpiry = await getJWTExpiry()
   const renewJwt = await getJWTRenewal()

@@ -8,7 +8,6 @@ import {
   NewDidEncryptionKey,
   ConfigService,
   Blockchain,
-  KiltAddress,
   ICType,
   DidDocument,
   Attestation,
@@ -109,7 +108,7 @@ export async function getKeypairs(
 }
 
 export async function getDidDoc(
-  account: KeyringPair,
+  account: KiltKeyringPair,
   keypairs: Keypairs,
   network: string | string[]
 ): Promise<DidDocument> {
@@ -157,9 +156,9 @@ export async function getDidDoc(
       assertionMethod: [assertion],
       keyAgreement: [keyAgreement],
     },
-    account.address as KiltAddress,
+    account.address,
     async ({ data }) => ({
-      data: authentication.sign(data),
+      signature: authentication.sign(data),
       keyType: authentication.type,
     })
   )
@@ -177,92 +176,66 @@ export async function getDidDoc(
 }
 
 export async function getAllSocialCTypes(
-  didDoc: DidDocument,
   account: KiltKeyringPair,
   keypairs: Keypairs
 ) {
   const ctypeTx: string[] = []
-  const githubCType = CType.fromSchema({
-    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-    title: 'GitHub',
-    properties: {
-      Username: {
-        type: 'string',
-      },
-      'User ID': {
-        type: 'string',
-      },
+  const githubCType = CType.fromProperties('GitHub', {
+    Username: {
+      type: 'string',
     },
-    type: 'object',
+    'User ID': {
+      type: 'string',
+    },
   })
 
   if (!(await isCtypeOnChain(githubCType))) {
     ctypeTx.push(CType.toChain(githubCType))
   }
 
-  const discordCType = CType.fromSchema({
-    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-    title: 'Discord',
-    properties: {
-      Username: {
-        type: 'string',
-      },
-      Discriminator: {
-        type: 'string',
-      },
-      'User ID': {
-        type: 'string',
-      },
+  const discordCType = CType.fromProperties('Discord', {
+    Username: {
+      type: 'string',
     },
-    type: 'object',
+    Discriminator: {
+      type: 'string',
+    },
+    'User ID': {
+      type: 'string',
+    },
   })
 
   if (!(await isCtypeOnChain(discordCType))) {
     ctypeTx.push(CType.toChain(discordCType))
   }
 
-  const emailCType = CType.fromSchema({
-    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-    title: 'Email',
-    properties: {
-      Email: {
-        type: 'string',
-      },
+  const emailCType = CType.fromProperties('Email', {
+    Email: {
+      type: 'string',
     },
-    type: 'object',
   })
 
   if (!(await isCtypeOnChain(emailCType))) {
     ctypeTx.push(CType.toChain(emailCType))
   }
 
-  const twitchCType = CType.fromSchema({
-    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-    title: 'Twitch',
-    properties: {
-      Username: {
-        type: 'string',
-      },
-      'User ID': {
-        type: 'string',
-      },
+  const twitchCType = CType.fromProperties('Twitch', {
+    Username: {
+      type: 'string',
     },
-    type: 'object',
+    'User ID': {
+      type: 'string',
+    },
   })
 
   if (!(await isCtypeOnChain(twitchCType))) {
     ctypeTx.push(CType.toChain(twitchCType))
   }
 
-  const twitterCType = CType.fromSchema({
-    $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-    title: 'Twitter',
-    properties: {
-      Twitter: {
-        type: 'string',
-      },
+  const twitterCType = CType.fromProperties('Twitter', {
+    Twitter: {
+      type: 'string',
     },
-    type: 'object',
   })
 
   if (!(await isCtypeOnChain(twitterCType))) {
@@ -286,36 +259,23 @@ export async function getAllSocialCTypes(
 
     const assertionSign = assertionCallback(didResolved.document)
 
-    await Promise.all(
-      ctypeTx.map(async (tx) => {
-        const ctypeCreationTx = api.tx.ctype.add(tx)
-        // Sign it with the right DID key
-        const extrinsic = await Did.authorizeExtrinsic(
-          didUri,
-          ctypeCreationTx,
-          assertionSign,
-          account.address
-        )
-
-        await Blockchain.signAndSubmitTx(extrinsic, account, {
-          resolveOn: Blockchain.IS_FINALIZED,
-        })
-      })
-    )
+    const extrinsics = ctypeTx.map((tx) => {
+      return api.tx.ctype.add(tx)
+    })
 
     // DID batch authorize is currently not useable
-    // if (extrinsics.filter((val) => val)) {
-    //   const batch = await Did.authorizeBatch({
-    //     batchFunction: api.tx.utility.batchAll,
-    //     did: didUri,
-    //     extrinsics,
-    //     sign: assertionSign,
-    //     submitter: account.address,
-    //   })
-    //   await Blockchain.signAndSubmitTx(batch, account, {
-    //     resolveOn,
-    //   })
-    // }
+    if (extrinsics.filter((val) => val)) {
+      const batch = await Did.authorizeBatch({
+        batchFunction: api.tx.utility.batchAll,
+        did: didUri,
+        extrinsics,
+        sign: assertionSign,
+        submitter: account.address,
+      })
+      await Blockchain.signAndSubmitTx(batch, account, {
+        resolveOn,
+      })
+    }
   }
 
   return { githubCType, discordCType, emailCType, twitchCType, twitterCType }
@@ -342,44 +302,28 @@ export async function attestClaim(
 
   const assertionSign = assertionCallback(didResolved.document)
 
-  await Promise.all(
-    credentials.map(async ({ credential }) => {
-      const { cTypeHash, claimHash } = Attestation.fromCredentialAndDid(
-        credential,
-        didUri
-      )
+  const extrinsics = credentials.map(({ credential }) => {
+    const { cTypeHash, claimHash } = Attestation.fromCredentialAndDid(
+      credential,
+      didUri
+    )
+    return api.tx.attestation.add(claimHash, cTypeHash, null)
+  })
 
-      const tx = api.tx.attestation.add(claimHash, cTypeHash, null)
-      const extrinsic = await Did.authorizeExtrinsic(
-        didUri,
-        tx,
-        assertionSign,
-        account.address
-      )
+  const batch = await Did.authorizeBatch({
+    batchFunction: api.tx.utility.batchAll,
+    did: didUri,
+    extrinsics,
+    sign: assertionSign,
+    submitter: account.address,
+  })
 
-      await Blockchain.signAndSubmitTx(extrinsic, account, {
-        resolveOn: Blockchain.IS_FINALIZED,
-      })
-    })
-  )
-
-  // DID batch authorize is currently not useable
-  // if (extrinsics.filter((val) => Boolean(val) !== true)) {
-  //   const batch = await Did.authorizeBatch({
-  //     batchFunction: api.tx.utility.batchAll,
-  //     did: didUri,
-  //     extrinsics,
-  //     sign: assertionSign,
-  //     submitter: account.address,
-  //   })
-  //   await Blockchain.signAndSubmitTx(batch, account, {
-  //     resolveOn,
-  //   })
-  // }
+  await Blockchain.signAndSubmitTx(batch, account, {
+    resolveOn,
+  })
 
   return await Promise.all(
     credentials.map(async ({ credential, ctype }) => {
-      const api = ConfigService.get('api')
       const attested = Boolean(
         await api.query.attestation.attestations(credential.rootHash)
       )

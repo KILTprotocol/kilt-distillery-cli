@@ -1,4 +1,4 @@
-import { Claim, init, Credential } from '@kiltprotocol/sdk-js'
+import { Claim, connect, Credential } from '@kiltprotocol/sdk-js'
 import { status, getClaimDetails } from './_prompts'
 import mainMenu from './main-menu'
 import {
@@ -14,13 +14,6 @@ import * as fs from 'fs'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
 import { Presentation } from '../types/types'
 
-async function connect() {
-  await status('connecting to network...')
-  await init({ address: 'wss://peregrine.kilt.io/parachain-public-ws' })
-}
-
-// To do: give each credential the correct name
-// Make the objects similar to the sporran object
 function saveAssets(credentials: Array<Presentation>) {
   const directory = `${process.cwd()}/claimer-credentials`
   fs.rmSync(directory, { recursive: true, force: true })
@@ -35,7 +28,8 @@ function saveAssets(credentials: Array<Presentation>) {
 }
 
 export default async function (): Promise<any> {
-  await connect()
+  await status('connecting to network...')
+  await connect('wss://peregrine.kilt.io/parachain-public-ws')
   const mnemonic = mnemonicGenerate()
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
@@ -46,30 +40,22 @@ export default async function (): Promise<any> {
   )
 
   const { githubCType, discordCType, emailCType, twitchCType, twitterCType } =
-    await getAllSocialCTypes(didDoc, account, keypairs)
+    await getAllSocialCTypes(account, keypairs)
 
   await status('Generating claimer github claim content...')
-  const githubClaimContents = await getClaimDetails(
-    githubCType.schema.properties
-  )
+  const githubClaimContents = await getClaimDetails(githubCType.properties)
 
   await status('Generating claimer twitch claim content...')
-  const twitchClaimContents = await getClaimDetails(
-    twitchCType.schema.properties
-  )
+  const twitchClaimContents = await getClaimDetails(twitchCType.properties)
 
   await status('Generating claimer twitter claim content...')
-  const twitterClaimContents = await getClaimDetails(
-    twitterCType.schema.properties
-  )
+  const twitterClaimContents = await getClaimDetails(twitterCType.properties)
 
   await status('Generating claimer email claim content...')
-  const emailClaimContents = await getClaimDetails(emailCType.schema.properties)
+  const emailClaimContents = await getClaimDetails(emailCType.properties)
 
   await status('Generating claimer discord claim content...')
-  const discordClaimContents = await getClaimDetails(
-    discordCType.schema.properties
-  )
+  const discordClaimContents = await getClaimDetails(discordCType.properties)
 
   const githubClaim = Claim.fromCTypeAndClaimContents(
     githubCType,

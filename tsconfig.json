@@ -2,10 +2,8 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "outDir": "dist",
     "lib": [
       "dom",
-      "dom.iterable",
       "esnext"
     ],
     "module": "ESNext",
@@ -21,6 +19,11 @@
     "resolveJsonModule": true,
     "isolatedModules": false,
     "noEmit": true
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
   },
   "include": [
     "menus/**/*.ts",
