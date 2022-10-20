@@ -1,3 +1,3 @@
-#!/usr/bin/env node
-import mainMenu from './menus/main-menu.js'
+#!/usr/bin/env ts-node-script
+import mainMenu from './menus/main-menu'
 mainMenu()
