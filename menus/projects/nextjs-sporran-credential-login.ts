@@ -4,7 +4,7 @@ import {
   getJWTRenewal,
   createTestCredentials,
 } from '../_prompts'
-import setupVerifier from '../setup-verifier'
+import setupIdentity from '../setup-identity'
 import { randomAsHex } from '@polkadot/util-crypto'
 import setupClaimer from '../setup-claimer'
 import * as fs from 'fs-extra'
@@ -14,7 +14,7 @@ export default async function (dappName: string) {
   const jwtSecret = randomAsHex(16)
   const jwtExpiry = await getJWTExpiry()
   const renewJwt = await getJWTRenewal()
-  const { origin, network, mnemonic, address, didUri } = await setupVerifier({
+  const { origin, network, mnemonic, address, didUri } = await setupIdentity({
     returnAssets: true,
   })
 

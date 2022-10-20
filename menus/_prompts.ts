@@ -49,8 +49,8 @@ export async function mainMenu() {
       message: 'select action',
       choices: [
         { name: 'create project from recipe', value: 'createProject' },
-        { name: 'setup claimer test credential', value: 'setupClaimer' },
-        // { name: 'setup verifier assets', value: 'setupVerifier' },
+        { name: 'setup Claimer test credential', value: 'setupClaimer' },
+        { name: 'setup Identity assets', value: 'setupIdentity' },
         { name: 'exit', value: 'exitCLI' },
       ],
     })

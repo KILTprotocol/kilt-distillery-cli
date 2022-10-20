@@ -1,5 +1,5 @@
-import { DidDocument, init, KeyringPair } from '@kiltprotocol/sdk-js'
-import { mnemonicGenerate, cryptoWaitReady } from '@polkadot/util-crypto'
+import { connect, DidDocument, KeyringPair } from '@kiltprotocol/sdk-js'
+import { mnemonicGenerate } from '@polkadot/util-crypto'
 import {
   getMnemonic,
   useExisting,
@@ -13,9 +13,10 @@ import * as fs from 'fs'
 import mainMenu from './main-menu'
 
 /**
- * Setup verifier results in
+ * Setup Account results in
  * - encryptionKey
- * - verifier mnemonic
+ * - Account mnemonic
+ * - Account DID
  */
 
 export default async function ({ returnAssets = false } = {}): Promise<any> {
@@ -30,7 +31,8 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
     : await getMnemonic()
 
   const origin = await getOrigin()
-  await connect(network)
+  await status('connecting to network...')
+  await connect('wss://peregrine.kilt.io/parachain-public-ws')
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
   const didDoc = await getDidDoc(account, keypairs, network)
@@ -55,7 +57,7 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
 
   await saveAssets(dotenv)
   await status(
-    `Done! Assets saved to /verifier-assets\n${chalk.reset.gray(
+    `Done! Assets saved to /Account-assets\n${chalk.reset.gray(
       '... press any key to return to main menu'
     )}`,
     {
@@ -64,12 +66,6 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
     }
   )
   return mainMenu()
-}
-
-async function connect(network: string) {
-  await status('connecting to network...')
-  await cryptoWaitReady()
-  await init({ address: network })
 }
 
 async function getEnvironmentVariables(
@@ -83,15 +79,15 @@ async function getEnvironmentVariables(
   let dotenv = ''
   dotenv += `ORIGIN=${origin}\n`
   dotenv += `WSS_ADDRESS=${network}\n`
-  dotenv += `VERIFIER_MNEMONIC=${mnemonic}\n`
-  dotenv += `VERIFIER_ADDRESS=${account.address}\n`
-  dotenv += `VERIFIER_DID_URI=${didDoc.uri}`
+  dotenv += `Account_MNEMONIC=${mnemonic}\n`
+  dotenv += `Account_ADDRESS=${account.address}\n`
+  dotenv += `Account_DID_URI=${didDoc.uri}`
   return dotenv
 }
 
 async function saveAssets(dotenv: string) {
-  await status('Generating Verifier assets...')
-  const directory = `${process.cwd()}/verifier-assets`
+  await status('Generating Account assets...')
+  const directory = `${process.cwd()}/Account-assets`
   fs.rmSync(directory, { recursive: true, force: true })
   fs.mkdirSync(directory)
   fs.writeFileSync(`${directory}/.env`, dotenv, 'utf-8')
