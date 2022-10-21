@@ -36,9 +36,10 @@ export type KeyToolSignCallback = (didDocument: DidDocument) => SignCallback
  * @param keypair The keypair to use for signing.
  * @returns The callback.
  */
-export function makeSignCallback(keypair: KeyringPair): KeyToolSignCallback {
+export function makeSignCallback(
+  keypair: KiltKeyringPair
+): KeyToolSignCallback {
   return (didDocument) =>
-    //@ts-ignore
     async function sign({ data, keyRelationship }) {
       const keyId = didDocument[keyRelationship]?.[0].id
       const keyType = didDocument[keyRelationship]?.[0].type
