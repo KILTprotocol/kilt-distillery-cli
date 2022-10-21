@@ -1,22 +1,27 @@
-import inquirer from 'inquirer'
+import inquirer, { Answers, QuestionCollection } from 'inquirer'
 import chalk from 'chalk'
 import { mnemonicValidate } from '@polkadot/util-crypto'
 import PressToContinuePrompt from 'inquirer-press-to-continue'
-import projects from './projects/index.js'
+import projects from './projects/index'
+import { InstanceType } from '@kiltprotocol/sdk-js'
+import * as validUrl from 'valid-url'
 
 inquirer.registerPrompt('press-to-continue', PressToContinuePrompt)
 
-async function prompt(prompt) {
+async function prompt(prompt: QuestionCollection<Answers>) {
   console.clear()
   return await inquirer.prompt({
     ...prompt,
+    //@ts-ignore
     prefix: `${chalk.bold(' KILT CLI ')}-`,
   })
 }
 
-export async function status(msg, opts = {}) {
-  return new Promise(async (resolve) => {
-    const { wait = 500, keyPress = false } = opts
+export async function status(
+  msg: string,
+  { wait = 500, keyPress = false }: { wait?: number; keyPress?: boolean } = {}
+) {
+  return new Promise<void>(async (resolve) => {
     const message = chalk.bold(` KILT DISTILLERY CLI - ${chalk.reset(msg)}`)
     console.clear()
     if (!keyPress) {
@@ -25,9 +30,10 @@ export async function status(msg, opts = {}) {
     }
 
     await inquirer.prompt({
+      //@ts-ignore
       name: 'key',
       type: 'press-to-continue',
-      message: message,
+      message,
       anyKey: true,
     })
 
@@ -43,8 +49,8 @@ export async function mainMenu() {
       message: 'select action',
       choices: [
         { name: 'create project from recipe', value: 'createProject' },
-        { name: 'setup claimer test credential', value: 'setupClaimer' },
-        //{ name: 'setup verifier assets', value: 'setupVerifier' },
+        { name: 'setup Claimer test credential', value: 'setupClaimer' },
+        { name: 'setup Identity assets', value: 'setupIdentity' },
         { name: 'exit', value: 'exitCLI' },
       ],
     })
@@ -125,7 +131,10 @@ export async function getRecipeProject() {
     ],
   })
 
-  if (project === 'cancel') return null
+  if (project === 'cancel') {
+    return null
+  }
+
   return projects[project]
 }
 
@@ -166,14 +175,14 @@ export async function getDappName() {
   ).dappName
 }
 
-export async function getClaimDetails(object) {
-  const question = Object.keys(object).map((val) => {
-    return {
-      type: 'input',
-      name: `${val}`,
-      message: `Please enter claim details ${val}?`,
-    }
-  })
+export async function getClaimDetails(object: {
+  [x: string]: { $ref?: string; type?: InstanceType; format?: string }
+}) {
+  const question = Object.keys(object).map((val) => ({
+    type: 'input',
+    name: `${val}`,
+    message: `Please enter claim details ${val}?`,
+  }))
   return inquirer.prompt(question)
 }
 

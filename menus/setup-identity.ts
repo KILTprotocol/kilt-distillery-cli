@@ -1,24 +1,25 @@
-import { ChainHelpers, init } from '@kiltprotocol/sdk-js'
-import { mnemonicGenerate, cryptoWaitReady } from '@polkadot/util-crypto'
+import { connect, DidDocument, KeyringPair } from '@kiltprotocol/sdk-js'
+import { mnemonicGenerate } from '@polkadot/util-crypto'
 import {
   getMnemonic,
   useExisting,
   getNetwork,
   getOrigin,
   status,
-} from './_prompts.js'
-import { getDidDoc, getKeypairs, loadAccount } from './utils/utils.js'
+} from './_prompts'
+import { getDidDoc, getKeypairs, loadAccount } from './utils/utils'
 import chalk from 'chalk'
-import fs from 'fs'
-import mainMenu from './main-menu.js'
+import * as fs from 'fs'
+import mainMenu from './main-menu'
 
 /**
- * setup verifier results in
+ * Setup Account results in
  * - encryptionKey
- * - verifier mnemonic
+ * - Account mnemonic
+ * - Account DID
  */
 
-export default async function ({ returnAssets = false } = {}) {
+export default async function ({ returnAssets = false } = {}): Promise<any> {
   const network = await getNetwork()
   const testnet =
     network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
@@ -30,8 +31,8 @@ export default async function ({ returnAssets = false } = {}) {
     : await getMnemonic()
 
   const origin = await getOrigin()
-  await connect(network)
-  await ChainHelpers.BlockchainApiConnection.getConnectionOrConnect()
+  await status('connecting to network...')
+  await connect('wss://peregrine.kilt.io/parachain-public-ws')
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
   const didDoc = await getDidDoc(account, keypairs, network)
@@ -43,52 +44,50 @@ export default async function ({ returnAssets = false } = {}) {
     origin
   )
 
-  if (returnAssets)
+  if (returnAssets) {
     return {
       network,
       origin,
       mnemonic,
       address: account.address,
-      didUri: didDoc.details.uri,
+      didUri: didDoc.uri,
       dotenv,
     }
+  }
 
   await saveAssets(dotenv)
   await status(
-    `Done! Assets saved to /verifier-assets\n${chalk.reset.gray(
+    `Done! Assets saved to /Account-assets\n${chalk.reset.gray(
       '... press any key to return to main menu'
     )}`,
-    { keyPress: true }
+    {
+      keyPress: true,
+      wait: 0,
+    }
   )
   return mainMenu()
 }
 
-async function connect(network) {
-  await status('connecting to network...')
-  await cryptoWaitReady()
-  await init({ address: network })
-}
-
 async function getEnvironmentVariables(
-  network,
-  mnemonic,
-  account,
-  didDoc,
-  origin
+  network: any,
+  mnemonic: any,
+  account: KeyringPair,
+  didDoc: DidDocument,
+  origin: any
 ) {
   await status('Building environment variables...')
   let dotenv = ''
   dotenv += `ORIGIN=${origin}\n`
   dotenv += `WSS_ADDRESS=${network}\n`
-  dotenv += `VERIFIER_MNEMONIC=${mnemonic}\n`
-  dotenv += `VERIFIER_ADDRESS=${account.address}\n`
-  dotenv += `VERIFIER_DID_URI=${didDoc.details.uri}`
+  dotenv += `Account_MNEMONIC=${mnemonic}\n`
+  dotenv += `Account_ADDRESS=${account.address}\n`
+  dotenv += `Account_DID_URI=${didDoc.uri}`
   return dotenv
 }
 
-async function saveAssets(dotenv) {
-  await status('Generating Verifier assets...')
-  const directory = `${process.cwd()}/verifier-assets`
+async function saveAssets(dotenv: string) {
+  await status('Generating Account assets...')
+  const directory = `${process.cwd()}/Account-assets`
   fs.rmSync(directory, { recursive: true, force: true })
   fs.mkdirSync(directory)
   fs.writeFileSync(`${directory}/.env`, dotenv, 'utf-8')

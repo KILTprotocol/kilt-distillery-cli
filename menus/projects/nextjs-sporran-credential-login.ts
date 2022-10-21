@@ -3,18 +3,18 @@ import {
   getJWTExpiry,
   getJWTRenewal,
   createTestCredentials,
-} from '../_prompts.js'
-import setupVerifier from '../setup-verifier.js'
+} from '../_prompts'
+import setupIdentity from '../setup-identity'
 import { randomAsHex } from '@polkadot/util-crypto'
-import setupClaimer from '../setup-claimer.js'
-import fs from 'fs-extra'
-import exitCli from '../exit-cli.js'
+import setupClaimer from '../setup-claimer'
+import * as fs from 'fs-extra'
+import exitCli from '../exit-cli'
 
-export default async function (dappName) {
+export default async function (dappName: string) {
   const jwtSecret = randomAsHex(16)
   const jwtExpiry = await getJWTExpiry()
   const renewJwt = await getJWTRenewal()
-  const { origin, network, mnemonic, address, didUri } = await setupVerifier({
+  const { origin, network, mnemonic, address, didUri } = await setupIdentity({
     returnAssets: true,
   })
 
@@ -34,7 +34,9 @@ export default async function (dappName) {
 
   if (!network.startsWith('wss://spiritnet')) {
     const needClaimer = await createTestCredentials()
-    if (needClaimer) await setupClaimer()
+    if (needClaimer) {
+      await setupClaimer()
+    }
   }
 
   await status(

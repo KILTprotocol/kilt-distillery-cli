@@ -1,0 +1,38 @@
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "module": "ESNext",
+    "noImplicitAny": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "noEmit": true
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  },
+  "include": [
+    "menus/**/*.ts",
+    "./index.ts/**/*.ts"
+  ], // which files to compile
+  "exclude": [
+    "node_modules",
+    "public",
+    "tsconfig.json",
+    "*/**/dist/**/*"
+  ] // which files to skip
+}
