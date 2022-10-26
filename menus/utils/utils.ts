@@ -5,7 +5,6 @@ import {
   Utils,
   KeyringPair,
   KiltKeyringPair,
-  NewDidEncryptionKey,
   ConfigService,
   Blockchain,
   ICType,
@@ -13,6 +12,7 @@ import {
   Attestation,
   ICredential,
   SignCallback,
+  KiltEncryptionKeypair,
 } from '@kiltprotocol/sdk-js'
 
 import {
@@ -91,7 +91,7 @@ export async function getKeypairs(
     ...account.derive('//did//assertion//0'),
     type: 'sr25519',
   } as KiltKeyringPair
-  const keyAgreement: NewDidEncryptionKey & Keypair = (function () {
+  const keyAgreement: KiltEncryptionKeypair = (function () {
     const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic))
     const { path } = keyExtractPath('//did//keyAgreement//0')
     const { secretKey } = keyFromPath(secretKeyPair, path, 'sr25519')
