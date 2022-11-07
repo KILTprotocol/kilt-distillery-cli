@@ -10,7 +10,7 @@ export interface Presentation {
   isDownloaded: boolean
   name: string
   credential: ICredential
-  attested: boolean
+  status: string 
 }
 
 export interface Keypairs {

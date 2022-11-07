@@ -325,9 +325,13 @@ export async function attestClaim(
 
   return await Promise.all(
     credentials.map(async ({ credential, ctype }) => {
-      const attested = Boolean(
-        await api.query.attestation.attestations(credential.rootHash)
-      )
+      // const attested = Boolean(
+      //   await api.query.attestation.attestations(credential.rootHash)
+      // )
+      
+      let status: string; 
+      if(await api.query.attestation.attestations(credential.rootHash))
+      { status= "attested"}else{status="pending"}
 
       return {
         attester: 'PeregrineSelfAttestedSocialKYC',
@@ -335,8 +339,11 @@ export async function attestClaim(
         isDownloaded: true,
         name: ctype,
         credential,
-        attested,
+        status,
       }
     })
   )
 }
+
+
+//const status = if(Boolean( await api.query.attestation.attestations(credential.rootHash))){ "attested"}else{"pending"}
