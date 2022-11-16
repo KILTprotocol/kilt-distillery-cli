@@ -1,0 +1,27 @@
+{
+  "attester": "PeregrineSelfAttestedSocialKYC",
+  "cTypeTitle": "peregrine twitter",
+  "isDownloaded": true,
+  "name": "peregrine twitter",
+  "credential": {
+    "claim": {
+      "cTypeHash": "0x47d04c42bdf7fdd3fc5a194bcaa367b2f4766a6b16ae3df628927656d818f420",
+      "contents": {
+        "Twitter": "Elmo"
+      },
+      "owner": "did:kilt:4pnKrtH42o2LD7F8dMdoWBQMQA2XhAXw6ZWcCcXYe6qU6hLo"
+    },
+    "legitimations": [],
+    "claimHashes": [
+      "0x17d55438b09b94ca7a61eb90be10bd48f66c10f9c78f188d125d0a08bec4b041",
+      "0xcdf90a41ce44a4e31d54080f0cf4be39c5741f83c1f61a3d9c2abe31286e831f"
+    ],
+    "claimNonceMap": {
+      "0xdc36373877157bfffa1d93d815374e3942f515db2bcbfe98d425e0f8edc874cf": "ab67b047-b460-42a0-a20f-551844803727",
+      "0x1c57efb49081fee6677a78c758ffd7de2ffe338c853a768ef29d705ee6263251": "f4f6533b-3a2a-4fd3-b120-5daa11eb999d"
+    },
+    "rootHash": "0xde05593fe8242e4847b5d51207157f92ff089ba8259d0dff4ac59d3964ed9660",
+    "delegationId": null
+  },
+  "status": "attested"
+}

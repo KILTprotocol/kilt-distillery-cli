@@ -1,0 +1,27 @@
+{
+  "attester": "PeregrineSelfAttestedSocialKYC",
+  "cTypeTitle": "peregrine email",
+  "isDownloaded": true,
+  "name": "peregrine email",
+  "credential": {
+    "claim": {
+      "cTypeHash": "0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac",
+      "contents": {
+        "Email": "email@internet.com"
+      },
+      "owner": "did:kilt:4pnKrtH42o2LD7F8dMdoWBQMQA2XhAXw6ZWcCcXYe6qU6hLo"
+    },
+    "legitimations": [],
+    "claimHashes": [
+      "0x1cf9f499ab093f88ac5aa46cba45f4461a34591851deacb4e1e3ce35399b1aa0",
+      "0x9039015c61114d6a8b716a3f5957d03dd4e5cb4876fab4d54ca4bc890f6f6ffb"
+    ],
+    "claimNonceMap": {
+      "0xdc36373877157bfffa1d93d815374e3942f515db2bcbfe98d425e0f8edc874cf": "807d2417-94bd-4957-8129-bb45362668ec",
+      "0xa93c988086e890d0def66f5dcd3f754a49ee90569054d55facd34fb0ebde6c91": "7724faec-9e5e-42c5-9635-59d3c543e18c"
+    },
+    "rootHash": "0x8282be1890d90940fd0217d74000c4f25f39bc2d3550708f1ff900f1b9fb1f06",
+    "delegationId": null
+  },
+  "status": "attested"
+}

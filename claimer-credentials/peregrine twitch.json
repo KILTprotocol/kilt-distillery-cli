@@ -1,0 +1,30 @@
+{
+  "attester": "PeregrineSelfAttestedSocialKYC",
+  "cTypeTitle": "peregrine twitch",
+  "isDownloaded": true,
+  "name": "peregrine twitch",
+  "credential": {
+    "claim": {
+      "cTypeHash": "0x568ec5ffd7771c4677a5470771adcdea1ea4d6b566f060dc419ff133a0089d80",
+      "contents": {
+        "User ID": "twichingID",
+        "Username": "NameinUse"
+      },
+      "owner": "did:kilt:4pnKrtH42o2LD7F8dMdoWBQMQA2XhAXw6ZWcCcXYe6qU6hLo"
+    },
+    "legitimations": [],
+    "claimHashes": [
+      "0x85adea8fa9a46cd36a455c491a61053e3004136c6be948df381b48037fb7a425",
+      "0x87b5f554ff74f78cd8e05b6d0f4057800c31cfde3105a96cb0b8b7b59e5e9535",
+      "0xd3780801d19bd3d95fc625c672b011ac4deedccc25b849defac3f7efac3d4f30"
+    ],
+    "claimNonceMap": {
+      "0xdc36373877157bfffa1d93d815374e3942f515db2bcbfe98d425e0f8edc874cf": "1df88c08-e0f5-40fb-8402-25ad881fcbef",
+      "0x646742978f2aa82ab857d54fedbe06e4d539b38b7261a9a5c700c2f2568791ab": "7e97e47f-b577-4cc2-9a51-a8013b89f614",
+      "0x99796817a4b843242396e4faa1a499b36ab2a70175e80e374491a5d1351b1785": "d3ca8d60-a5ad-4a1e-8b3a-e52b87dc7deb"
+    },
+    "rootHash": "0x0dc69ecd6ebbc6888044047cb94ff94ac4b91f0d3d9e772675fd2cf1ca185c9a",
+    "delegationId": null
+  },
+  "status": "attested"
+}
