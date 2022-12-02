@@ -5,11 +5,13 @@ CLI tool to help devs quickly accomplish commons tasks and get started with proj
 This tool is in beta and intended to ease development efforts, not as a replacement for production code. 
 
 ## install
-`sudo npm install -g git+https://github.com/KILTprotocol/kilt-distillery-cli`  
+### locally on your repository
+`npm install git+https://github.com/KILTprotocol/kilt-distillery-cli`  
 
 or
 
-`sudo yarn global add git+https://github.com/KILTprotocol/kilt-distillery-cli`  
+`yarn add git+https://github.com/KILTprotocol/kilt-distillery-cli`  
+ 
 
 ## run
 from the terminal  
