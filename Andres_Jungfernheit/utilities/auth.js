@@ -84,6 +84,7 @@ export function randomChallenge() {
 export async function getDidFromValidSignature({ input, output }) {
   // configure KILT address from .env and connect
   await cryptoWaitReady()
+  console.log("doing the autorization")
   await init({ address: process.env.WSS_ADDRESS })
 
   // resolve the client's did document

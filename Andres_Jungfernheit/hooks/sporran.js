@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import {init, connect} from '@kiltprotocol/sdk-js';
+import { cryptoWaitReady, randomAsHex, signatureVerify} from '@polkadot/util-crypto';
 
 export default function useSporran () {
   const [ sporran, setSporran ] = useState(null);
@@ -29,6 +31,10 @@ export default function useSporran () {
   async function startSession() {
     setWaiting(true);
 
+    //last try:
+    await cryptoWaitReady();
+    console.log("starting session");
+    await init({ address: process.env.WSS_ADDRESS });
     
     const values = await fetch('/api/session');
     if (!values.ok) throw Error(values.statusText);
