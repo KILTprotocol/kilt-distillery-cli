@@ -6,10 +6,10 @@
         "https://www.w3.org/2018/credentials/v1",
         "https://identity.foundation/.well-known/did-configuration/v1"
       ],
-      "id": "kilt:cred:0x15e6e3a6583ac502645e6da31a035e6c331122a9cf8218c171b9fe79dcccc32e",
+      "id": "kilt:cred:0x1c67c76ccab36d2426418774282146f0eb3f6461a1d237b1a2f2a14681abe0d5",
       "issuer": "did:kilt:4pN9eZ8qTRQSaokkAEAwC9cZQCmQDRGhRn8ne2nCNZzoLRRy",
-      "issuanceDate": "2022-12-07T17:03:31.496Z",
-      "expirationDate": "2027-12-06T17:03:31.495Z",
+      "issuanceDate": "2022-11-11T15:12:24.149Z",
+      "expirationDate": "2027-11-10T15:12:24.147Z",
       "type": [
         "VerifiableCredential",
         "DomainLinkageCredential",
@@ -18,14 +18,16 @@
       "credentialSubject": {
         "id": "did:kilt:4pN9eZ8qTRQSaokkAEAwC9cZQCmQDRGhRn8ne2nCNZzoLRRy",
         "origin": "http://localhost:3927",
-        "rootHash": "0x15e6e3a6583ac502645e6da31a035e6c331122a9cf8218c171b9fe79dcccc32e"
+        "rootHash": "0x1c67c76ccab36d2426418774282146f0eb3f6461a1d237b1a2f2a14681abe0d5"
       },
       "proof": {
         "type": "KILTSelfSigned2020",
         "proofPurpose": "assertionMethod",
         "verificationMethod": "did:kilt:4pN9eZ8qTRQSaokkAEAwC9cZQCmQDRGhRn8ne2nCNZzoLRRy#0x7379b1fa0edb3b8fe8a060b4b1152582d4b6ceaa5598c70644f4a6986e2e6197",
-        "signature": "0xc023b2d5b0b8eccb3dc72e1219439e97821ee2c6142449ab992c75c55dc692381eff1eacce882ab4752f7f2e0d7f6b94af84690216ad432204d5c0146f6b8587"
+        "signature": "0x042f1816524ef1782343816be518648207026e9c52a48d1c0b52962514b80b0f9c3281ffa37ed1feeb0a1a9f1ae510102d3d6100b64f7eb52ea808e4f5225585"
       }
     }
   ]
 }
+
+

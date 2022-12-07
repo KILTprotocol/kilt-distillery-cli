@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {init, connect} from '@kiltprotocol/sdk-js';
 import { cryptoWaitReady, randomAsHex, signatureVerify} from '@polkadot/util-crypto';
+import { getApi } from "../utilities/connection";
 
 export default function useSporran () {
   const [ sporran, setSporran ] = useState(null);
@@ -25,16 +26,17 @@ export default function useSporran () {
       setWaiting(false);
     });
   
-    await session.send(message);
+    await session.send(message, "donde esta esto?");
   }
 
   async function startSession() {
     setWaiting(true);
 
     //last try:
-    await cryptoWaitReady();
+    //await cryptoWaitReady();
     console.log("starting session");
-    await init({ address: process.env.WSS_ADDRESS });
+    //await getApi();
+    //await connect("wss://peregrine.kilt.io/parachain-public-ws");
     
     const values = await fetch('/api/session');
     if (!values.ok) throw Error(values.statusText);
@@ -47,15 +49,15 @@ export default function useSporran () {
     } = await values.json();
 
     console.log(
-      "awesome, its working!",'\n',
+      "awesome, the Sporran-hook is working!",'\n',
       "sessionId:", sessionId,'\n',
       "challenge:", challenge,'\n',
       "dAppName:", dappName,'\n',
       "dAppEncryptionKeyUri:", dAppEncryptionKeyUri,'\n',
     )
 
-    const session = await sporran.startSession(dappName, dAppEncryptionKeyUri, challenge)
-    console.error("here is the stuff" , session);
+    const session = await sporran.startSession(dappName, dAppEncryptionKeyUri, challenge) //its stuck here
+    console.log("here is the stuff" , session);
     
     // const valid = await fetch('/api/session', { 
     //   method: 'POST', 

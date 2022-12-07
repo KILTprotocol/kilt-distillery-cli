@@ -4,6 +4,7 @@ import { serialize, parse } from 'cookie';
 import { init, disconnect, Did, KeyRelationship } from '@kiltprotocol/sdk-js';
 import { cryptoWaitReady, randomAsHex, signatureVerify} from '@polkadot/util-crypto';
 import {Keyring } from '@polkadot/keyring';
+import { getApi } from "./connection";
 
 export const cTypes = [
   {
@@ -83,9 +84,9 @@ export function randomChallenge() {
 
 export async function getDidFromValidSignature({ input, output }) {
   // configure KILT address from .env and connect
-  await cryptoWaitReady()
+  
   console.log("doing the autorization")
-  await init({ address: process.env.WSS_ADDRESS })
+  await getApi();
 
   // resolve the client's did document
   const didUri = output.didKeyUri.split('#').shift()
@@ -107,7 +108,6 @@ export async function getDidFromValidSignature({ input, output }) {
       .isValid === true;
 
   // disconnect 
-  await disconnect()
 
   return isValid ? didUri : null
 }

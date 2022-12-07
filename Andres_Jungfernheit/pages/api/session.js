@@ -2,7 +2,8 @@ import { randomAsHex, cryptoWaitReady } from "@polkadot/util-crypto"
 import storage from 'memory-cache';
 import { decryptChallenge, getFullDid } from "../../utilities/verifier";
 import { exit, getEncryptionKey, methodNotFound } from "../../utilities/helpers";
-import { connect, disconnect, init } from '@kiltprotocol/sdk-js'
+import { getApi } from "../../utilities/connection";
+
 /** validateSession
  * checks that an established session is valid
  */
@@ -15,6 +16,7 @@ async function validateSession(req, res) {
   if (!session) return exit(res, 500, 'invalid session');
 
   // load the encryption key
+  await getApi()
   const encryptionKey = await getEncryptionKey(encryptionKeyId)
   if (!encryptionKey) return exit(res, 500, `failed resolving ${encryptionKeyId}`);
 
@@ -38,9 +40,8 @@ async function validateSession(req, res) {
  * provides client with data needed to start session
  */
 async function returnSessionValues(req, res) {
-  // await cryptoWaitReady()
-  // await connect(process.env.WSS_ADDRESS)
   // create session data
+  await getApi()
   const fullDid = await getFullDid()
   
   const dAppEncryptionKeyUri = `${process.env.VERIFIER_DID_URI}${fullDid.document.assertionMethod[0].id}`
@@ -58,8 +59,8 @@ async function returnSessionValues(req, res) {
 
   // Log the session local storage:
 
-  // const query = storage.get(session.sessionId)
-  // console.log(query);
+  const query = storage.get(session.sessionId)
+  console.log(query);
 
 
 

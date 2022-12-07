@@ -1,5 +1,6 @@
 import { clearCookie, setCookie, createJWT, getCookieData } from '../../utilities/auth';
 import { ConfigService, Did } from '@kiltprotocol/sdk-js'
+import { getApi } from "../../utilities/connection";
 
 
 
@@ -9,6 +10,8 @@ export default async function handler(req, res) {
 
   // get the user from cookie
   const user = getCookieData({ name: 'token', cookie }) // did-uri from the extension
+
+  await getApi()
 
   if (!user) {
     // if null ensure cookie is cleared & 401

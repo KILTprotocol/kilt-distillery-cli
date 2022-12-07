@@ -1,6 +1,6 @@
 import { Did, connect, disconnect} from "@kiltprotocol/sdk-js";
 import { cryptoWaitReady } from "@polkadot/util-crypto";
-
+import { getApi } from "./connection";
 
 export const exit = (response, status, message) => {
   response.statusMessage = message;
@@ -13,10 +13,8 @@ export async function methodNotFound(request, response) {
 }
 
 export async function getEncryptionKey(encryptionKeyId) {
-  await cryptoWaitReady();
-  await connect( process.env.WSS_ADDRESS );
+  await getApi();
   const encryptionKey = await Did.resolveKey(encryptionKeyId);
-  await disconnect();
   return encryptionKey
   
 }
