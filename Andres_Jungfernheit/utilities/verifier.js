@@ -62,9 +62,15 @@ export async function decryptChallenge(
   nonce
 ) {
   // decrypt the challenge
+  console.log("inside the verifier.js: ")
+  console.log("trying to decrypt the challenge...")
+  console.log("encryptedChallenge: ", encryptedChallenge)
+  console.log("encryptionKey: ", encryptionKey)
+  console.log("nonce: ", nonce)
   const data = Utils.Crypto.coToUInt8(encryptedChallenge)
   const nonced = Utils.Crypto.coToUInt8(nonce)
   const peerPublicKey = encryptionKey.publicKey
+  //const peerPublicKey = Utils.Crypto.coToUInt8(encryptionKey.publicKey) // failed try
   const keypair = await keypairs()
   const decrypted = naclOpen(
     data,
@@ -74,6 +80,9 @@ export async function decryptChallenge(
   )
 
   // compare hex strings, fail if mismatch
+  console.log("decrypted: ", decrypted)
+  console.log("the return ", Utils.Crypto.u8aToHex(decrypted))
+  console.log("leaving the verifier.js: ")
   return Utils.Crypto.u8aToHex(decrypted)
 }
 

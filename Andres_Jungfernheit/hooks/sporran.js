@@ -26,7 +26,7 @@ export default function useSporran () {
       setWaiting(false);
     });
   
-    await session.send(message, "donde esta esto?");
+    await session.send(message);
   }
 
   async function startSession() {
@@ -56,19 +56,19 @@ export default function useSporran () {
       "dAppEncryptionKeyUri:", dAppEncryptionKeyUri,'\n',
     )
 
-    const session = await sporran.startSession(dappName, dAppEncryptionKeyUri, challenge) //its stuck here
+    const session = await sporran.startSession(dappName, dAppEncryptionKeyUri, challenge) 
     console.log("here is the stuff" , session);
     
-    // const valid = await fetch('/api/session', { 
-    //   method: 'POST', 
-    //   headers: { ContentType: 'application/json' },
-    //   body: JSON.stringify({ ...session, sessionId }),
-    // });
+    const valid = await fetch('/api/session', { 
+      method: 'POST', 
+      headers: { ContentType: 'application/json' },
+      body: JSON.stringify({ ...session, sessionId }),
+    });
 
-    // if (!valid.ok) throw Error(valid.statusText);
+    if (!valid.ok) throw Error(valid.statusText); //it is stuck here
 
-    // setWaiting(false);
-    // setSession({ sessionId, ...session });
+    setWaiting(false);
+    setSession({ sessionId, ...session });
   }
 
   useEffect(() => {
@@ -77,12 +77,20 @@ export default function useSporran () {
     if (!inState && inWindow) {
       setSporran(window.kilt.sporran);
     }
+
+    // probably need this somewhere: 
+    // meta: {
+    //   versions: {
+    //     credentials: '3.0'
+    //   }
+    // }
     
     if (!inState) {
       window.kilt = new Proxy({}, { 
         set(target, prop, value) {
           if (prop === 'sporran') {
             setSporran(value);
+
           }
           return !!(target[prop] = value);
         } 

@@ -10,10 +10,13 @@ import { getApi } from "../../utilities/connection";
 async function validateSession(req, res) {
   // the payload from client
   const { encryptionKeyId, encryptedChallenge, nonce, sessionId } = JSON.parse(req.body);
+  console.log( "printing what sporran sends me", JSON.parse(req.body));
 
   // load the session, fail if null
   const session = storage.get(sessionId)
   if (!session) return exit(res, 500, 'invalid session');
+
+  console.log("session.challenge: ", session.challenge)
 
   // load the encryption key
   await getApi()
@@ -22,6 +25,7 @@ async function validateSession(req, res) {
 
   // decrypt the message
   const decrypted = await decryptChallenge(encryptedChallenge, encryptionKey, nonce);
+  console.log("decrypted", decrypted) //here is the problem
   if (decrypted !== session.challenge) return exit(res, 500, 'challenge mismatch');
 
   // update the session
@@ -46,7 +50,7 @@ async function returnSessionValues(req, res) {
   
   const dAppEncryptionKeyUri = `${process.env.VERIFIER_DID_URI}${fullDid.document.assertionMethod[0].id}`
   console.log(dAppEncryptionKeyUri);
-  // console.log(JSON.stringify(fullDid, null, 2));
+  //console.log(JSON.stringify(fullDid, null, 2));
   const session = {
     sessionId: randomAsHex(),
     challenge: randomAsHex(),
