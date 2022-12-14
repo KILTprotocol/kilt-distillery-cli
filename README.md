@@ -1,26 +1,30 @@
 # kilt-distillery-cli
-CLI tool to help devs quickly accomplish commons tasks and get started with project recipes
+**Command-Line-Interface** tool to help devs quickly accomplish commons tasks and get started with project recipes.
 
 ## disclaimer
 This tool is in beta and intended to ease development efforts, not as a replacement for production code. 
 
 ## install
 ### locally on your repository
-`npm install git+https://github.com/KILTprotocol/kilt-distillery-cli`  
+```js
+npm install git+https://github.com/KILTprotocol/kilt-distillery-cli
+```
 
 or
-
-`yarn add git+https://github.com/KILTprotocol/kilt-distillery-cli`  
- 
+```js
+yarn add git+https://github.com/KILTprotocol/kilt-distillery-cli  
+ ```
 
 ## run
 from the terminal  
-`kilt-distillery-cli`  
+```js
+kilt-distillery-cli
+```
 
-or 
-
-`yarn run start`
-
+or, inside the terminal of the cloned repository: 
+```js
+yarn run start
+```
 ## Setup Claimer Flow
 
 The Claimer CLI tool allows you to create self-attested socialKYC on the peregrine test network. It helps speed up the testing of utilities such as web3 login or credential access on a project by running through the CLI and producing credentials in minutes.
@@ -106,3 +110,19 @@ Now the last thing, you can import them directly into the developer version of s
 If you do not have the developer sporran or a wallet that accepts KILT credentials follow the sporran instructions on how to create a developer wallet. 
 
 How does web3 login work? Check out our recipe Credential login or DID login.
+
+## Create your own Project (=Decentralized Application) from our recipe:
+
+- Accessing the KILT CLI, choose `create project from recipe` with the arrows and enter.
+
+- Follow the inline instructions. 
+
+
+- After the project was created, to launch it use:
+
+  - `yarn dev`   *this uses the default IP:* `http://localhost:3000`. 
+  -  `yarn next dev -p 1234` *instead of `1234` write down your custumized IP-ending.* 
+ So `3642` for `http://localhost:3642`. 
+
+
+
