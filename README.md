@@ -16,6 +16,8 @@ or
 ## run
 from the terminal  
 `kilt-distillery-cli`  
+or 
+`yarn run start`
 
 ## Setup Claimer Flow
 
