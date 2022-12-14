@@ -3,7 +3,7 @@ import storage from 'memory-cache';
 import { decryptChallenge, getFullDid } from "../../utilities/verifier";
 import { exit, getEncryptionKey, methodNotFound } from "../../utilities/helpers";
 import { getApi } from "../../utilities/connection";
-
+import { init, disconnect, Did, KeyRelationship } from '@kiltprotocol/sdk-js';
 /** validateSession
  * checks that an established session is valid
  */
@@ -20,19 +20,20 @@ async function validateSession(req, res) {
 
   // load the encryption key
   await getApi()
-  const encryptionKey = await getEncryptionKey(encryptionKeyId)
+  const encryptionKey = await Did.resolveKey(encryptionKeyId);
   if (!encryptionKey) return exit(res, 500, `failed resolving ${encryptionKeyId}`);
 
   // decrypt the message
   const decrypted = await decryptChallenge(encryptedChallenge, encryptionKey, nonce);
-  console.log("decrypted", decrypted) //here is the problem
+  console.log("decrypted", decrypted) 
   if (decrypted !== session.challenge) return exit(res, 500, 'challenge mismatch');
+
 
   // update the session
   storage.put(sessionId, {
     ...session,
     did: encryptionKey.controller,
-    encryptionKeyId,
+    encryptionKeyUri: encryptionKeyId,
     didConfirmed: true,
   });
 
@@ -48,8 +49,8 @@ async function returnSessionValues(req, res) {
   await getApi()
   const fullDid = await getFullDid()
   
-  const dAppEncryptionKeyUri = `${process.env.VERIFIER_DID_URI}${fullDid.document.assertionMethod[0].id}`
-  console.log(dAppEncryptionKeyUri);
+  const dAppEncryptionKeyUri = `${process.env.VERIFIER_DID_URI}${fullDid.document.keyAgreement[0].id}`
+  // console.log("inside session.js dAppEncryptionKeyUri:", dAppEncryptionKeyUri);// this is pirnted with the rest of the query later
   //console.log(JSON.stringify(fullDid, null, 2));
   const session = {
     sessionId: randomAsHex(),
@@ -64,7 +65,7 @@ async function returnSessionValues(req, res) {
   // Log the session local storage:
 
   const query = storage.get(session.sessionId)
-  console.log(query);
+  console.log("inside session.js: ", "--here comes the query (wich is in this case the local session storage):", query);
 
 
 

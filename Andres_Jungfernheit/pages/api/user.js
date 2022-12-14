@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   // get the user from cookie
   const user = getCookieData({ name: 'token', cookie }) // did-uri from the extension
-
+  console.log(user)
   await getApi()
 
   if (!user) {
@@ -25,6 +25,7 @@ export default async function handler(req, res) {
       const newToken = createJWT(user)
       setCookie(res, { name: 'token', data: newToken })
     }
+    console.log(user, "whatever")
 
     const web3Name = await api.query.web3Names.names(user);
 

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import {init, connect} from '@kiltprotocol/sdk-js';
-import { cryptoWaitReady, randomAsHex, signatureVerify} from '@polkadot/util-crypto';
+import { init, connect } from '@kiltprotocol/sdk-js';
+import { cryptoWaitReady, randomAsHex, signatureVerify } from '@polkadot/util-crypto';
 import { getApi } from "../utilities/connection";
 
-export default function useSporran () {
-  const [ sporran, setSporran ] = useState(null);
-  const [ session, setSession ] = useState(null);
-  const [ waiting, setWaiting ] = useState(false);
+export default function useSporran() {
+  const [sporran, setSporran] = useState(null);
+  const [session, setSession] = useState(null);
+  const [waiting, setWaiting] = useState(false);
 
   async function presentCredential() {
     setWaiting(true);
@@ -14,18 +14,25 @@ export default function useSporran () {
 
     const { sessionId } = session;
     const result = await fetch(`/api/verify?sessionId=${sessionId}`);
+
     const message = await result.json();
+    try {
+      console.log("inside sporran.js the message:", message)
+      await session.listen(async (message) => {
+      console.log("enter")
+        await fetch('/api/verify', {
+          method: 'POST',
+          headers: { ContentType: 'application/json' },
+          body: JSON.stringify({ sessionId, message }),
+        })
+        // console.log("inside sporran,js result:", result)
+      }
+      )
+    } catch (e) { console.log(e) }
 
-    session.listen(async message => {
-      const result = await fetch('/api/verify', {
-        method: 'POST',
-        headers: { ContentType: 'application/json' },
-        body: JSON.stringify({ sessionId, message }),
-      });
+    setWaiting(false);
 
-      setWaiting(false);
-    });
-  
+
     await session.send(message);
   }
 
@@ -37,7 +44,7 @@ export default function useSporran () {
     console.log("starting session");
     //await getApi();
     //await connect("wss://peregrine.kilt.io/parachain-public-ws");
-    
+
     const values = await fetch('/api/session');
     if (!values.ok) throw Error(values.statusText);
 
@@ -49,18 +56,18 @@ export default function useSporran () {
     } = await values.json();
 
     console.log(
-      "awesome, the Sporran-hook is working!",'\n',
-      "sessionId:", sessionId,'\n',
-      "challenge:", challenge,'\n',
-      "dAppName:", dappName,'\n',
-      "dAppEncryptionKeyUri:", dAppEncryptionKeyUri,'\n',
+      "awesome, the Sporran-hook is working!", '\n',
+      "sessionId:", sessionId, '\n',
+      "challenge:", challenge, '\n',
+      "dAppName:", dappName, '\n',
+      "dAppEncryptionKeyUri:", dAppEncryptionKeyUri, '\n',
     )
 
-    const session = await sporran.startSession(dappName, dAppEncryptionKeyUri, challenge) 
-    console.log("here is the stuff" , session);
-    
-    const valid = await fetch('/api/session', { 
-      method: 'POST', 
+    const session = await sporran.startSession(dappName, dAppEncryptionKeyUri, challenge)
+    console.log("here is the stuff", session);
+
+    const valid = await fetch('/api/session', {
+      method: 'POST',
       headers: { ContentType: 'application/json' },
       body: JSON.stringify({ ...session, sessionId }),
     });
@@ -84,25 +91,25 @@ export default function useSporran () {
     //     credentials: '3.0'
     //   }
     // }
-    
+
     if (!inState) {
-      window.kilt = new Proxy({}, { 
+      window.kilt = new Proxy({}, {
         set(target, prop, value) {
           if (prop === 'sporran') {
             setSporran(value);
 
           }
           return !!(target[prop] = value);
-        } 
+        }
       })
     }
   });
 
-  return { 
-    sporran, 
-    session, 
-    waiting, 
-    startSession, 
+  return {
+    sporran,
+    session,
+    waiting,
+    startSession,
     presentCredential,
   }
 }

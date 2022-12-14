@@ -62,16 +62,23 @@ export async function decryptChallenge(
   nonce
 ) {
   // decrypt the challenge
-  console.log("inside the verifier.js: ")
-  console.log("trying to decrypt the challenge...")
-  console.log("encryptedChallenge: ", encryptedChallenge)
-  console.log("encryptionKey: ", encryptionKey)
-  console.log("nonce: ", nonce)
+
+                    // console.log("inside the verifier.js: ")
+                    // console.log("trying to decrypt the challenge...")
+                    // console.log("encryptedChallenge: ", encryptedChallenge)
+                    // console.log("encryptionKey: ", encryptionKey)
+                    // console.log("nonce: ", nonce)
   const data = Utils.Crypto.coToUInt8(encryptedChallenge)
   const nonced = Utils.Crypto.coToUInt8(nonce)
   const peerPublicKey = encryptionKey.publicKey
   //const peerPublicKey = Utils.Crypto.coToUInt8(encryptionKey.publicKey) // failed try
   const keypair = await keypairs()
+  // console.log("printing what the function naclOpen gets: -----------------------------------")
+  // console.log("data: ", data)
+  // console.log("nounced:  ", nonced)
+  // console.log("peerPublicKey:  ", peerPublicKey)
+  // console.log("keypair.keyAgreement.secretKey:  ", keypair.keyAgreement.secretKey)
+
   const decrypted = naclOpen(
     data,
     nonced,
@@ -80,32 +87,10 @@ export async function decryptChallenge(
   )
 
   // compare hex strings, fail if mismatch
-  console.log("decrypted: ", decrypted)
-  console.log("the return ", Utils.Crypto.u8aToHex(decrypted))
-  console.log("leaving the verifier.js: ")
+      // console.log("decrypted: ", decrypted)
+      // console.log("the return ", Utils.Crypto.u8aToHex(decrypted))
+      // console.log("leaving the verifier.js: ")
   return Utils.Crypto.u8aToHex(decrypted)
 }
 
-export const encryptionKeystore = {
-  async encrypt({ data, alg, peerPublicKey }) {
-    const keypair = await keypairs()
-    const { sealed, nonce } = naclSeal(
-      data,
-      keypair.keyAgreement.secretKey,
-      peerPublicKey
-    )
-    return { data: sealed, alg, nonce }
-  },
-  async decrypt({ data, alg, nonce, peerPublicKey }) {
-    const keypair = await keypairs()
 
-    const decrypted = naclOpen(
-      data,
-      nonce,
-      peerPublicKey,
-      keypair.keyAgreement.secretKey
-    )
-    if (!decrypted) throw new Error('Failed to decrypt with given key')
-    return { data: decrypted, alg }
-  },
-}

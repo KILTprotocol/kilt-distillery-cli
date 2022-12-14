@@ -25,8 +25,13 @@ export default function useUser() {
   async function login() {
     if (!sporran) return
     if (!session) return await startSession()
+    console.log("1.: trying to login, so it just called startSession() from sporran.js")
+
     await presentCredential()
+    console.log("2.: just presented the credential")
+
     const result = await (await fetch('/api/user')).text()
+    console.log("here is the result", result)
     _user = !!result ? result : null
     setUser(_user)
   }
