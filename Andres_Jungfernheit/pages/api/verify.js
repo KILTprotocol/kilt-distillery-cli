@@ -1,6 +1,6 @@
 import { Utils, Message, MessageBodyType, Credential, Did } from '@kiltprotocol/sdk-js';
 import storage from 'memory-cache';
-import { exit, methodNotFound, makeEncryptCallback } from '../../utilities/helpers'
+import { exit, methodNotFound, makeDecryptCallback, makeEncryptCallback, decrypt } from '../../utilities/helpers'
 import { getFullDid, keypairs } from "../../utilities/verifier";
 import { cTypes, clearCookie, createJWT, setCookie } from '../../utilities/auth';
 
@@ -26,10 +26,25 @@ async function verifyRequest(req, res) {
   // get decrypted message
   const fullDid = await getFullDid();
   const { keyAgreement } = await keypairs();
-  const signer = makeEncryptCallback(keyAgreement);
-  const message = await Message.decrypt(rawMessage, signer(fullDid.document));
+  // const signer = makeDecryptCallback(keyAgreement);
+
+  console.log("rawMessage:", rawMessage);
+  // const message = await Message.decrypt(rawMessage, signer(fullDid.document)); //old version 
+  // How to fix it:
+  const correctMessage = {
+    ciphertext: rawMessage.ciphertext,
+    nonce: rawMessage.nonce,
+    receiverKeyUri: rawMessage.receiverKeyId,
+    senderKeyUri: rawMessage.senderKeyId
+  };
+  // const message = await Message.decrypt(correctMessage, signer(fullDid.document));
+
+  const message = await Message.decrypt(correctMessage, decrypt)
+  console.log("message", message)
   const messageBody = message.body;
   const { type, content } = messageBody;
+
+  console.log("content", messageBody.content, "type:", type);
 
   // fail if incorrect message type
   if (type !== 'submit-credential') {
@@ -88,11 +103,12 @@ async function getRequest(req, res) {
   storage.put(sessionId, { ...session, challenge });
 
   // construct the message
-  const content = { ...cTypes, challenge };
+  const content = { cTypes: [...cTypes], challenge };
   const type = 'request-credential'; //before: MessageBodyType.REQUEST_CREDENTIAL<
   const didUri = process.env.VERIFIER_DID_URI;
   console.log("c) didUri in the verify.js:  (inside the getRequest)", didUri)
   // const keyDid = encryptionKeyId.replace(/#.*$/, ''); // outdated
+  //const receiverDID = Did.parse(encryptionKeyUri).did; // this is how they do it on SocialKYC. same result as “encryptionKey.controller" 
   const message = Message.fromBody({ content, type }, didUri, encryptionKey.controller); // encryptionKey.controller is the receiver light DidUri
   if (!message) return exit(res, 500, 'failed to construct message');
   console.log("d) the message before encrypting: ", message)
@@ -108,11 +124,24 @@ async function getRequest(req, res) {
   if (!output) return exit(res, 500, `failed to encrypt message`);
   console.log("d) the message after encrypting: ", output)
 
+  const encryptedObject = {
+    /** ID of the key agreement key of the receiver DID used to encrypt the message */
+    receiverKeyId: output.receiverKeyUri,
+
+    /** ID of the key agreement key of the sender DID used to encrypt the message */
+    senderKeyId: output.senderKeyUri,
+
+    /** ciphertext as hexadecimal */
+    ciphertext: output.ciphertext,
+
+    /** 24 bytes nonce as hexadecimal */
+    nonce: output.nonce,
+  }
 
 
   console.log("e) leaving verify.js getRequest()")
 
-  res.status(200).send(output);
+  res.status(200).send(encryptedObject);
 }
 
 // expose GET and POST routes

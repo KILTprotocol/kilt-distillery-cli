@@ -1,5 +1,5 @@
-import { Crypto} from "@kiltprotocol/utils";
-import { cryptoWaitReady } from "@polkadot/util-crypto";
+import { Crypto } from "@kiltprotocol/utils";
+import { cryptoWaitReady, naclOpen, naclSeal } from "@polkadot/util-crypto";
 import { getApi } from "./connection";
 
 
@@ -22,30 +22,49 @@ export function makeEncryptCallback(
       if (!keyId) {
         throw new Error(`Encryption key not found in did "${didDocument.uri}"`)
       }
-      const { box, nonce } = Crypto.encryptAsymmetric(
+      const { sealed, nonce } = naclSeal(
         data,
+        keyAgreementKey.secretKey,
         peerPublicKey,
-        keyAgreementKey.secretKey
       )
       return {
         nonce,
-        data: box,
+        data: sealed,
         keyUri: `${didDocument.uri}${keyId}`,
       }
     }
   }
 }
-export function makeDecryptCallback(
-  keyAgreementKey
-) {
-  return async function decryptCallback({ data, nonce, peerPublicKey }) {
-    const decrypted = Crypto.decryptAsymmetric(
-      { box: data, nonce },
-      peerPublicKey,
-      keyAgreementKey.secretKey
-    )
-    if (decrypted === false) throw new Error('Decryption failed')
-    return { data: decrypted }
+// export function makeDecryptCallback(
+//   keyAgreementKey
+// ) {
+//   return async function decryptCallback({ data, nonce, peerPublicKey }) {
+//     const decrypted = Crypto.decryptAsymmetric(
+//       { box: data, nonce },
+//       peerPublicKey,
+//       keyAgreementKey.secretKey
+//     )
+//     if (decrypted === false) throw new Error('Decryption failed')
+//     return { data: decrypted }
+//   }
+// }
+
+export async function decrypt({
+  data,
+  peerPublicKey,
+  nonce,
+}) {
+  console.log("data on the decrypt function:", data)
+  console.log("peerPublic on the decrypt function:", peerPublicKey)
+  console.log("nonce on the decrypt function:", nonce)
+  const { keyAgreement } = await getKeypairs()
+  const decrypted = naclOpen(data, nonce, peerPublicKey, keyAgreement.secretKey)
+  console.log("decrypted on the decrypt function:", decrypted)
+  if (!decrypted) {
+    throw new Error("Failed to decrypt with given key")
+  }
+  return {
+    data: decrypted,
   }
 }
 
