@@ -39,6 +39,8 @@ Accessing the KILT CLI, choose setup claimer socialKYC credentials
 
 Enter a test mnemonic you wish to use for the credentials. Make sure to note down the mnemonic for future steps.
 
+*** The script will generate an environment file within the directory.***
+
  *** ONLY USE TEST MNEMONICS; IT IS NOT SAFE OVERWISE AS IT IS ONLY FOR TEST PURPOSES***
 
 If the mnemonic doesn’t already have tokens, it will check the balance and request tokens from the KILT Faucet
