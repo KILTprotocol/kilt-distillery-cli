@@ -114,7 +114,7 @@ export async function getOrigin() {
       )}\n${chalk.cyan('❯')}`,
       validate: (origin) =>
         origin.startsWith('http://localhost:') ||
-        validUrl.isUri(origin) ||
+        !!validUrl.isUri(origin) ||
         'invalid origin',
     })
   ).origin
