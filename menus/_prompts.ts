@@ -51,6 +51,7 @@ export async function mainMenu() {
         { name: 'create project from recipe', value: 'createProject' },
         { name: 'setup Claimer test credential', value: 'setupClaimer' },
         { name: 'setup Identity assets', value: 'setupIdentity' },
+        { name: 'create CType', value: 'createCType' },
         { name: 'exit', value: 'exitCLI' },
       ],
     })
@@ -200,4 +201,14 @@ export async function createTestCredentials() {
       })
     ).renew === 'true'
   )
+}
+
+export async function getCTypeStringObject() {
+  return (
+    await prompt({
+      type: 'input',
+      name: 'ctypeString',
+      message: 'Enter the serialized CType',
+    })
+  ).ctypeString
 }

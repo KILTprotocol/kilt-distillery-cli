@@ -32,7 +32,7 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
 
   const origin = await getOrigin()
   await status('connecting to network...')
-  await connect('wss://peregrine.kilt.io/parachain-public-ws')
+  await connect(network)
   const account = await loadAccount(mnemonic)
   const keypairs = await getKeypairs(account, mnemonic)
   const didDoc = await getDidDoc(account, keypairs, network)
