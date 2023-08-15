@@ -139,31 +139,24 @@ export async function getRecipeProject() {
   return projects[project]
 }
 
-export async function getJWTExpiry() {
+export async function getFrontendPort() {
   return (
     await prompt({
       type: 'input',
-      name: 'expiry',
-      message:
-        'how long should JWT be valid units of time? Example, 1 day or 2 hours:',
+      name: 'frontend',
+      message: 'Specify the frontend port',
     })
-  ).expiry
+  ).frontend
 }
 
-export async function getJWTRenewal() {
+export async function getBackendPort() {
   return (
-    (
-      await prompt({
-        type: 'list',
-        name: 'renew',
-        message: 'auto renew the JWT?',
-        choices: [
-          { name: 'yes', value: 'true' },
-          { name: 'no', value: 'false' },
-        ],
-      })
-    ).renew === 'true'
-  )
+    await prompt({
+      type: 'input',
+      name: 'backend',
+      message: 'Specify the backend port',
+    })
+  ).backend
 }
 
 export async function getDappName() {

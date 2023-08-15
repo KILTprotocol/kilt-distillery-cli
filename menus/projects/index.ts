@@ -1,9 +1,9 @@
-import nextjsSporranCredentialLogin from './nextjs-sporran-credential-login'
+import web3Login from './web3-login'
 
 export default [
   {
-    name: 'NextJS Credential Login',
-    repo: 'KILTprotocol/nextjs-sporran-credential-login',
-    create: nextjsSporranCredentialLogin,
+    name: 'web3 Login',
+    repo: 'KILTprotocol/web3-login-demo',
+    create: web3Login,
   },
 ]

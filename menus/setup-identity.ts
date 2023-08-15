@@ -79,9 +79,9 @@ async function getEnvironmentVariables(
   let dotenv = ''
   dotenv += `ORIGIN=${origin}\n`
   dotenv += `WSS_ADDRESS=${network}\n`
-  dotenv += `Account_MNEMONIC=${mnemonic}\n`
-  dotenv += `Account_ADDRESS=${account.address}\n`
-  dotenv += `Account_DID_URI=${didDoc.uri}`
+  dotenv += `ACCOUNT_MNEMONIC=${mnemonic}\n`
+  dotenv += `ACCOUNT_ADDRESS=${account.address}\n`
+  dotenv += `ACCOUNT_DID_URI=${didDoc.uri}`
   return dotenv
 }
 
