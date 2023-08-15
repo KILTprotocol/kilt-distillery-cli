@@ -20,12 +20,10 @@ import {
   keyExtractPath,
   keyFromPath,
   blake2AsU8a,
-  naclBoxPairFromSecret,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto'
 import { status } from '../_prompts'
 import chalk from 'chalk'
-import { Keypair } from '@polkadot/util-crypto/types'
 import { Keypairs, Presentation } from '../../types/types'
 
 export type KeyToolSignCallback = (didDocument: DidDocument) => SignCallback
@@ -96,7 +94,7 @@ export async function getKeypairs(
     const { path } = keyExtractPath('//did//keyAgreement//0')
     const { secretKey } = keyFromPath(secretKeyPair, path, 'sr25519')
     return {
-      ...naclBoxPairFromSecret(blake2AsU8a(secretKey)),
+      ...Utils.Crypto.naclBoxPairFromSecret(blake2AsU8a(secretKey)),
       type: 'x25519',
     }
   })()
