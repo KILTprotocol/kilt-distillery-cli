@@ -12,16 +12,15 @@ export default async function (dappName: string) {
 
   let dotenv = ''
 
-  dotenv += `URL="${origin}"`
-  dotenv += `PORT="${port}"`
+  dotenv += `URL="${origin}"\n`
+  dotenv += `PORT="${port}"\n`
   dotenv += `DAPP_NAME="${dappName}"\n`
   dotenv += `BLOCKCHAIN_ENDPOINT=${network}\n`
   dotenv += `SECRET_PAYER_MNEMONIC="${mnemonic}"\n`
-  dotenv += `SECRET_ASSERTION_METHOD_MNEMONIC=${mnemonic}\n`
-  dotenv += `SECRET_KEY_AGREEMENT_MNEMONIC=${mnemonic}\n`
-  dotenv += `DID=${didUri}\n`
-  dotenv += 'ADMIN_USERNAME=example'
-  dotenv += 'ADMIN_PASSWORD=attester'
+  dotenv += `SECRET_ASSERTION_METHOD_MNEMONIC="${mnemonic}"\n`
+  dotenv += `SECRET_KEY_AGREEMENT_MNEMONIC="${mnemonic}"\n`
+  dotenv += `SECRET_AUTHENTICATION_MNEMONIC="${mnemonic}"\n`
+  dotenv += `DID="${didUri}"\n`
 
   status('creating files...')
   fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
