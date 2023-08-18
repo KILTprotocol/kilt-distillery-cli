@@ -12,19 +12,13 @@ import {
   Attestation,
   ICredential,
   SignCallback,
-  KiltEncryptionKeypair,
 } from '@kiltprotocol/sdk-js'
 
-import {
-  mnemonicToMiniSecret,
-  keyExtractPath,
-  keyFromPath,
-  blake2AsU8a,
-  sr25519PairFromSeed,
-} from '@polkadot/util-crypto'
 import { status } from '../_prompts'
 import chalk from 'chalk'
 import { Keypairs, Presentation } from '../../types/types'
+
+const signingKeyPairType = 'sr25519'
 
 export type KeyToolSignCallback = (didDocument: DidDocument) => SignCallback
 
@@ -66,68 +60,9 @@ export async function isCtypeOnChain(ctype: ICType): Promise<boolean> {
 }
 export const resolveOn = ChainHelpers.Blockchain.IS_FINALIZED
 
-export async function loadAccount(seed: string): Promise<KiltKeyringPair> {
-  await status('loading account...')
-  const signingKeyPairType = 'sr25519'
-  const keyring = new Utils.Keyring({
-    ss58Format: 38,
-    type: signingKeyPairType,
-  })
-  const account = keyring.addFromMnemonic(seed) as KiltKeyringPair
-  return account
-}
-
-export async function getKeypairs(
-  account: KeyringPair,
-  mnemonic: string
-): Promise<Keypairs> {
-  const authentication = {
-    ...account.derive('//did//0'),
-    type: 'sr25519',
-  } as KiltKeyringPair
-  const assertion = {
-    ...account.derive('//did//assertion//0'),
-    type: 'sr25519',
-  } as KiltKeyringPair
-  const keyAgreement: KiltEncryptionKeypair = (function () {
-    const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic))
-    const { path } = keyExtractPath('//did//keyAgreement//0')
-    const { secretKey } = keyFromPath(secretKeyPair, path, 'sr25519')
-    return {
-      ...Utils.Crypto.naclBoxPairFromSecret(blake2AsU8a(secretKey)),
-      type: 'x25519',
-    }
-  })()
-
-  return {
-    authentication,
-    assertion,
-    keyAgreement,
-  }
-}
-
-export async function getDidDoc(
-  account: KiltKeyringPair,
-  keypairs: Keypairs,
-  network: string | string[]
-): Promise<DidDocument> {
-  await status('checking for existing DID...')
+export async function loadBalance(account: KiltKeyringPair, testnet: any) {
   const api = ConfigService.get('api')
 
-  const { authentication, assertion, keyAgreement } = keypairs
-
-  const didUri = Did.getFullDidUriFromKey(authentication)
-
-  let didDoc = await Did.resolve(didUri)
-
-  if (didDoc && didDoc.document) {
-    await status('DID loaded from chain...')
-    return didDoc.document
-  }
-
-  await status('checking balance...')
-
-  const testnet = network.indexOf('peregrine') > 0
   let balance = parseInt(
     (await api.query.system.account(account.address)).data.free.toString()
   )
@@ -148,11 +83,64 @@ export async function getDidDoc(
       await new Promise((r) => setTimeout(r, 2000))
     }
   }
+}
 
+export async function loadAccount(seed: string): Promise<KiltKeyringPair> {
+  await status('loading account...')
+  return Utils.Crypto.makeKeypairFromUri(seed, signingKeyPairType)
+}
+
+export async function getKeypairs(
+  account: KeyringPair,
+  mnemonic: string
+): Promise<Keypairs> {
+  const authentication = Utils.Crypto.makeKeypairFromUri(
+    mnemonic,
+    signingKeyPairType
+  )
+
+  const assertionMethod = Utils.Crypto.makeKeypairFromUri(
+    mnemonic,
+    signingKeyPairType
+  )
+
+  const keyAgreement = Utils.Crypto.makeEncryptionKeypairFromSeed(
+    Utils.Crypto.mnemonicToMiniSecret(mnemonic)
+  )
+
+  return {
+    authentication,
+    assertionMethod,
+    keyAgreement,
+  }
+}
+
+export async function getDidDoc(
+  account: KiltKeyringPair,
+  keypairs: Keypairs,
+  network: string | string[]
+): Promise<DidDocument> {
+  await status('checking for existing DID...')
+  const api = ConfigService.get('api')
+
+  const { authentication, assertionMethod, keyAgreement } = keypairs
+
+  const didUri = Did.getFullDidUriFromKey(authentication)
+
+  let didDoc = await Did.resolve(didUri)
+
+  if (didDoc && didDoc.document) {
+    await status('DID loaded from chain...')
+    return didDoc.document
+  }
+
+  await status('checking balance...')
+
+  await loadBalance(account, network)
   const extrinsic = await Did.getStoreTx(
     {
       authentication: [authentication],
-      assertionMethod: [assertion],
+      assertionMethod: [assertionMethod],
       keyAgreement: [keyAgreement],
     },
     account.address,
@@ -244,7 +232,7 @@ export async function getAllSocialCTypes(
   if (ctypeTx.length > 0) {
     const api = ConfigService.get('api')
 
-    const { authentication, assertion } = keypairs
+    const { authentication, assertionMethod } = keypairs
 
     const didUri = Did.getFullDidUriFromKey(authentication)
 
@@ -254,7 +242,7 @@ export async function getAllSocialCTypes(
       throw new Error('Document of resolved DID not found')
     }
 
-    const assertionCallback = makeSignCallback(assertion)
+    const assertionCallback = makeSignCallback(assertionMethod)
 
     const assertionSign = assertionCallback(didResolved.document)
 
@@ -287,7 +275,7 @@ export async function attestClaim(
 ): Promise<Array<Presentation>> {
   const api = ConfigService.get('api')
 
-  const { authentication, assertion } = keypairs
+  const { authentication, assertionMethod } = keypairs
 
   const didUri = Did.getFullDidUriFromKey(authentication)
 
@@ -297,7 +285,7 @@ export async function attestClaim(
     throw new Error('Document of resolved DID not found')
   }
 
-  const assertionCallback = makeSignCallback(assertion)
+  const assertionCallback = makeSignCallback(assertionMethod)
 
   const assertionSign = assertionCallback(didResolved.document)
 

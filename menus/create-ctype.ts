@@ -54,7 +54,7 @@ export default async function (): Promise<any> {
   await status(`initalizing the ctype...${ctype.$id}`)
 
   if (!(await isCtypeOnChain(ctype))) {
-    const { authentication, assertion } = keypairs
+    const { authentication, assertionMethod } = keypairs
 
     const didUri = Did.getFullDidUriFromKey(authentication)
 
@@ -64,7 +64,7 @@ export default async function (): Promise<any> {
       throw new Error('Document of resolved DID not found')
     }
 
-    const assertionCallback = makeSignCallback(assertion)
+    const assertionCallback = makeSignCallback(assertionMethod)
 
     const assertionSign = assertionCallback(didResolved.document)
 
