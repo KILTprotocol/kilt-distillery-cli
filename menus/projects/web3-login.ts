@@ -40,7 +40,8 @@ export default async function (dappName: string) {
   }
 
   await status(
-    `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn run dev`
+    `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn run build\nyarn run start`,
+    { keyPress: true }
   )
 
   return exitCli()

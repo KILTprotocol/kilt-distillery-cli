@@ -1,14 +1,35 @@
-import { status, createTestCredentials, getFrontendPort } from '../_prompts'
-import setupIdentity from '../setup-identity'
+import {
+  status,
+  createTestCredentials,
+  getBackendPort,
+  getMnemonic,
+  getNetwork,
+  getOrigin,
+  useExisting,
+} from '../_prompts'
+
 import setupClaimer from '../setup-claimer'
 import * as fs from 'fs-extra'
 import exitCli from '../exit-cli'
+import { connect } from '@kiltprotocol/sdk-js'
+import { mnemonicGenerate } from '@polkadot/util-crypto'
+import { loadAccount } from '../utils/utils'
 
 export default async function (dappName: string) {
-  const { network, mnemonic, didUri } = await setupIdentity({
-    returnAssets: true,
-  })
-  const port = await getFrontendPort()
+  const network = await getNetwork()
+  const testnet =
+    network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
+
+  const mnemonic = testnet
+    ? (await useExisting())
+      ? await getMnemonic()
+      : mnemonicGenerate()
+    : await getMnemonic()
+  const origin = await getOrigin()
+  await status('connecting to network...')
+  await connect(network)
+  await loadAccount(mnemonic)
+  const port = await getBackendPort()
 
   let dotenv = ''
 
@@ -20,7 +41,6 @@ export default async function (dappName: string) {
   dotenv += `SECRET_ASSERTION_METHOD_MNEMONIC="${mnemonic}"\n`
   dotenv += `SECRET_KEY_AGREEMENT_MNEMONIC="${mnemonic}"\n`
   dotenv += `SECRET_AUTHENTICATION_MNEMONIC="${mnemonic}"\n`
-  dotenv += `DID="${didUri}"\n`
 
   status('creating files...')
   fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
@@ -33,7 +53,8 @@ export default async function (dappName: string) {
   }
 
   await status(
-    `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn run dev`
+    `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn run did-create\nyarn run did-configuration\nyarn run dev`,
+    { keyPress: true }
   )
 
   return exitCli()
