@@ -12,7 +12,7 @@ import * as fs from 'fs-extra'
 import exitCli from '../exit-cli'
 import { connect } from '@kiltprotocol/sdk-js'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
-import { loadAccount } from '../utils/utils'
+import { loadAccount, loadBalance } from '../utils/utils'
 
 export default async function (dappName: string) {
   const network = await getNetwork()
@@ -27,7 +27,9 @@ export default async function (dappName: string) {
   const origin = await getOrigin()
   await status('connecting to network...')
   await connect(network)
-  await loadAccount(mnemonic)
+  const account = await loadAccount(mnemonic)
+  await status('checking balance...')
+  await loadBalance(account, network)
   const port = await getBackendPort()
 
   let dotenv = ''
@@ -53,8 +55,8 @@ export default async function (dappName: string) {
   }
 
   await status(
-    `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn run did-create\nyarn run did-configuration\nyarn run dev`,
-    { keyPress: true }
+    `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn run build§\nyarn run did-create\nyarn run did-configuration\nyarn run dev`,
+    { wait: 100000, keyPress: true }
   )
 
   return exitCli()
