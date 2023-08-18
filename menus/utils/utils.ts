@@ -90,10 +90,7 @@ export async function loadAccount(seed: string): Promise<KiltKeyringPair> {
   return Utils.Crypto.makeKeypairFromUri(seed, signingKeyPairType)
 }
 
-export async function getKeypairs(
-  account: KeyringPair,
-  mnemonic: string
-): Promise<Keypairs> {
+export async function getKeypairs(mnemonic: string): Promise<Keypairs> {
   const authentication = Utils.Crypto.makeKeypairFromUri(
     mnemonic,
     signingKeyPairType
