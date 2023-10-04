@@ -18,8 +18,6 @@ import { status } from '../_prompts'
 import chalk from 'chalk'
 import { Keypairs, Presentation } from '../../types/types'
 
-const signingKeyPairType = 'sr25519'
-
 export type KeyToolSignCallback = (didDocument: DidDocument) => SignCallback
 
 /**
@@ -87,19 +85,13 @@ export async function loadBalance(account: KiltKeyringPair, testnet: any) {
 
 export async function loadAccount(seed: string): Promise<KiltKeyringPair> {
   await status('loading account...')
-  return Utils.Crypto.makeKeypairFromUri(seed, signingKeyPairType)
+  return Utils.Crypto.makeKeypairFromUri(seed)
 }
 
 export async function getKeypairs(mnemonic: string): Promise<Keypairs> {
-  const authentication = Utils.Crypto.makeKeypairFromUri(
-    mnemonic,
-    signingKeyPairType
-  )
+  const authentication = Utils.Crypto.makeKeypairFromUri(mnemonic)
 
-  const assertionMethod = Utils.Crypto.makeKeypairFromUri(
-    mnemonic,
-    signingKeyPairType
-  )
+  const assertionMethod = Utils.Crypto.makeKeypairFromUri(mnemonic)
 
   const keyAgreement = Utils.Crypto.makeEncryptionKeypairFromSeed(
     Utils.Crypto.mnemonicToMiniSecret(mnemonic)
