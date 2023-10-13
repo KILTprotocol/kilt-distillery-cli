@@ -13,7 +13,8 @@ import * as fs from 'fs-extra'
 import exitCli from '../exit-cli'
 import { connect } from '@kiltprotocol/sdk-js'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
-import { loadAccount, loadBalance } from '../utils/utils'
+import { loadAccount } from '../utils/loadAccount'
+import { loadBalance } from '../utils/loadBalance'
 
 export default async function (dappName: string) {
   const network = await getNetwork()
@@ -28,7 +29,7 @@ export default async function (dappName: string) {
   const origin = await getOrigin()
   await status('connecting to network...')
   await connect(network)
-  const account = await loadAccount(mnemonic)
+  const account = await loadAccount({ seed: mnemonic })
   await status('checking balance...')
   await loadBalance(account, network)
 

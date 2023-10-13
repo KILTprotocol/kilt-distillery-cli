@@ -7,7 +7,9 @@ import {
   getOrigin,
   status,
 } from './_prompts'
-import { getDidDoc, getKeypairs, loadAccount } from './utils/utils'
+import { loadAccount } from './utils/loadAccount'
+import { getDidDoc } from './utils/getDidDoc'
+import { getKeypairs } from './utils/getKeypairs'
 import chalk from 'chalk'
 import * as fs from 'fs'
 import mainMenu from './main-menu'
@@ -33,9 +35,9 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
   const origin = await getOrigin()
   await status('connecting to network...')
   await connect(network)
-  const account = await loadAccount(mnemonic)
-  const keypairs = await getKeypairs(account, mnemonic)
-  const didDoc = await getDidDoc(account, keypairs, network)
+  const account = await loadAccount({ seed: mnemonic })
+  const keypairs = await getKeypairs(mnemonic)
+  const didDoc = await getDidDoc({ account, keypairs, network })
   const dotenv = await getEnvironmentVariables(
     network,
     mnemonic,
@@ -69,12 +71,12 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
 }
 
 async function getEnvironmentVariables(
-  network: any,
-  mnemonic: any,
+  network: string,
+  mnemonic: string,
   account: KeyringPair,
   didDoc: DidDocument,
-  origin: any
-) {
+  origin: string
+): Promise<string> {
   await status('Building environment variables...')
   let dotenv = ''
   dotenv += `ORIGIN=${origin}\n`

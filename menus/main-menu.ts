@@ -15,6 +15,7 @@ const menus = {
 
 export default async function () {
   const action = await mainMenu()
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-ignore
   return menus[action]()
 }
