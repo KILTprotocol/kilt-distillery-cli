@@ -66,7 +66,7 @@ export async function loadBalance(account: KiltKeyringPair, testnet: any) {
   )
   if (balance < 3) {
     const message = testnet
-      ? chalk.red(
+      ? chalk.orange(
           `get testnet tokens to continue => https://faucet.peregrine.kilt.io/?${account.address}`
         )
       : chalk.red(
