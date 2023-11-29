@@ -3,12 +3,14 @@ import {
   createTestCredentials,
   getFrontendPort,
   getBackendPort,
+  generateProject,
 } from '../_prompts'
 import setupIdentity from '../setup-identity'
 import { randomAsHex } from '@polkadot/util-crypto'
 import setupClaimer from '../setup-claimer'
 import * as fs from 'fs-extra'
 import exitCli from '../exit-cli'
+import { initialiseProject } from '../utils/initialiseProject'
 
 export default async function (dappName: string) {
   const jwtSecret = randomAsHex(16)
@@ -38,7 +40,9 @@ export default async function (dappName: string) {
       await setupClaimer()
     }
   }
-
+  if (await generateProject()) {
+    await initialiseProject(dappName)
+  }
   await status(
     `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn run build\nyarn run start`,
     { wait: 100000, keyPress: true }

@@ -235,3 +235,21 @@ export async function getCTypeStringObject() {
     })
   ).ctypeString
 }
+
+export async function generateProject() {
+  return (
+    (
+      await prompt({
+        prompt: {
+          type: 'list',
+          name: 'action',
+          message: 'Initalise and install the project?',
+          choices: [
+            { name: 'yes', value: 'true' },
+            { name: 'no', value: 'false' },
+          ],
+        },
+      })
+    ).action === 'true'
+  )
+}

@@ -1,9 +1,15 @@
-import { status, createTestCredentials, getBackendPort } from '../_prompts'
+import {
+  status,
+  createTestCredentials,
+  getBackendPort,
+  generateProject,
+} from '../_prompts'
 import setupClaimer from '../setup-claimer'
 import * as fs from 'fs-extra'
 import exitCli from '../exit-cli'
 
 import setupIdentity from '../setup-identity'
+import { initialiseProject } from '../utils/initialiseProject'
 
 export default async function (dappName: string) {
   const { network, mnemonic, didUri, origin } = await setupIdentity({
@@ -25,16 +31,18 @@ export default async function (dappName: string) {
   dotenv += 'ADMIN_USERNAME="example"\n'
   dotenv += 'ADMIN_PASSWORD="attester"\n'
 
-  status('creating files...')
+  await status('creating files...')
   fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
 
   if (!network.startsWith('wss://spiritnet')) {
-    const needClaimer = await createTestCredentials()
-    if (needClaimer) {
+    if (await createTestCredentials()) {
       await setupClaimer()
     }
   }
 
+  if (await generateProject()) {
+    await initialiseProject(dappName)
+  }
   await status(
     `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn build\nyarn run did-create\nyarn run did-configuration\nyarn run dev\nyarn run dev-start`,
     { wait: 100000, keyPress: true }
