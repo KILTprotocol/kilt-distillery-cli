@@ -2,19 +2,21 @@ import { status } from '../_prompts'
 import { exec } from 'child_process'
 import util from 'util'
 import exitCli from '../exit-cli'
+
 const promisifyExec = util.promisify(exec)
 
-export async function initialiseProject(dappName: string) {
+export async function initialiseProject(projectPath: string) {
   await status('initializing project...')
-  process.chdir(dappName)
-
-  await status('installing dependencies...')
-  await promisifyExec('yarn install')
-  await status('building...')
-  await promisifyExec('yarn run build')
-  await status('Creating a well known did config')
-  await promisifyExec('yarn run did-configuration')
-  await status('start project with: yarn run start')
+  process.chdir(projectPath)
+  await status('installing dependencies...', { wait: 1500 })
+  const options = { cwd: projectPath }
+  await status('installing dependencies...', { wait: 1500 })
+  await promisifyExec('yarn install', options)
+  await status('building...', { wait: 1500 })
+  await promisifyExec('yarn run build', options)
+  await status('Creating a well known did config', { wait: 1500 })
+  await promisifyExec('yarn run did-configuration', options)
+  await status('start project with: yarn run start', { wait: 1500 })
 
   return exitCli()
 }

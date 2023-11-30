@@ -29,18 +29,19 @@ export default async function (dappName: string) {
   dotenv += `SECRET_KEY_AGREEMENT_MNEMONIC="${mnemonic}"\n`
   dotenv += `SECRET_AUTHENTICATION_MNEMONIC="${mnemonic}"\n`
   dotenv += `DID="${didUri}"\n`
+  const projectPath = `${process.cwd()}/${dappName}`
 
-  status('creating files...')
-  fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
+  await status('creating files...')
+  fs.writeFileSync(`${projectPath}/.env`, dotenv)
 
   if (!network.startsWith('wss://spiritnet')) {
-    const needClaimer = await createTestCredentials()
-    if (needClaimer) {
+    if (await createTestCredentials()) {
       await setupClaimer()
     }
   }
+
   if (await generateProject()) {
-    await initialiseProject(dappName)
+    await initialiseProject(projectPath)
   }
   await status(
     `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn build\nyarn run did-create\nyarn run did-configuration\nyarn run dev\nyarn run dev-start`,

@@ -31,8 +31,9 @@ export default async function (dappName: string) {
   dotenv += 'ADMIN_USERNAME="example"\n'
   dotenv += 'ADMIN_PASSWORD="attester"\n'
 
+  const projectPath = `${process.cwd()}/${dappName}`
   await status('creating files...')
-  fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
+  fs.writeFileSync(`${projectPath}/.env`, dotenv)
 
   if (!network.startsWith('wss://spiritnet')) {
     if (await createTestCredentials()) {
@@ -41,7 +42,7 @@ export default async function (dappName: string) {
   }
 
   if (await generateProject()) {
-    await initialiseProject(dappName)
+    await initialiseProject(projectPath)
   }
   await status(
     `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn build\nyarn run did-create\nyarn run did-configuration\nyarn run dev\nyarn run dev-start`,

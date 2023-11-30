@@ -30,22 +30,23 @@ export default async function (dappName: string) {
   dotenv += `JWT_SIGNER_SECRET=${jwtSecret}\n`
   dotenv += `FRONTEND_PORT=${frontend}\n`
   dotenv += `BACKEND_PORT=${backend}\n`
+  const projectPath = `${process.cwd()}/${dappName}`
 
-  status('creating files...')
-  fs.writeFileSync(`${process.cwd()}/${dappName}/.env`, dotenv)
+  await status('creating files...')
+  fs.writeFileSync(`${projectPath}/.env`, dotenv)
 
   if (!network.startsWith('wss://spiritnet')) {
-    const needClaimer = await createTestCredentials()
-    if (needClaimer) {
+    if (await createTestCredentials()) {
       await setupClaimer()
     }
   }
+
   if (await generateProject()) {
-    await initialiseProject(dappName)
+    await initialiseProject(projectPath)
   }
   await status(
     `all done! to run the project:\nmove to '${dappName}' directory\nyarn install\nyarn run build\nyarn run start`,
-    { wait: 100000, keyPress: true }
+    { wait: 1500, keyPress: true }
   )
 
   return exitCli()
