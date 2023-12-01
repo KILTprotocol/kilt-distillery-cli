@@ -13,17 +13,15 @@ import {
   useExisting,
 } from './_prompts'
 import mainMenu from './main-menu'
-import {
-  loadAccount,
-  getKeypairs,
-  isCtypeOnChain,
-  makeSignCallback,
-  resolveOn,
-} from './utils/utils'
+import { resolveOn } from './utils/resolveOn'
+import { loadAccount } from './utils/loadAccount'
+import { isCtypeOnChain } from './utils/isCtypeOnChain'
+import { makeSignCallback } from './utils/makeSignCallback'
+import { getKeypairs } from './utils/getKeypairs'
 
 import { mnemonicGenerate } from '@polkadot/util-crypto'
 
-export default async function (): Promise<any> {
+export default async function (): Promise<void> {
   const network = await getNetwork()
   const testnet =
     network.indexOf('peregrin') > -1 || network.indexOf('sporran') > -1
@@ -38,8 +36,8 @@ export default async function (): Promise<any> {
   await connect(network)
   const api = ConfigService.get('api')
 
-  const account = await loadAccount(mnemonic)
-  const keypairs = await getKeypairs(account, mnemonic)
+  const account = await loadAccount({ seed: mnemonic })
+  const keypairs = await getKeypairs(mnemonic)
   await status('initializing keypairs...')
 
   const ctypeString = await getCTypeStringObject()
@@ -53,8 +51,8 @@ export default async function (): Promise<any> {
 
   await status(`initalizing the ctype...${ctype.$id}`)
 
-  if (!(await isCtypeOnChain(ctype))) {
-    const { authentication, assertion } = keypairs
+  if (!(await isCtypeOnChain({ ctype }))) {
+    const { authentication, assertionMethod } = keypairs
 
     const didUri = Did.getFullDidUriFromKey(authentication)
 
@@ -64,7 +62,7 @@ export default async function (): Promise<any> {
       throw new Error('Document of resolved DID not found')
     }
 
-    const assertionCallback = makeSignCallback(assertion)
+    const assertionCallback = makeSignCallback({ keypair: assertionMethod })
 
     const assertionSign = assertionCallback(didResolved.document)
 
@@ -84,12 +82,12 @@ export default async function (): Promise<any> {
       wait: 10000,
     })
 
-    return await mainMenu()
+    await mainMenu()
   }
 
   await status(`Done! CType has been generated: \n${ctype.$id}`, {
     wait: 10000,
   })
 
-  return await mainMenu()
+  await mainMenu()
 }

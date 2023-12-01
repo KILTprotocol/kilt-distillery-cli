@@ -1,13 +1,9 @@
 import { connect, DidDocument, KeyringPair } from '@kiltprotocol/sdk-js'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
-import {
-  getMnemonic,
-  useExisting,
-  getNetwork,
-  getOrigin,
-  status,
-} from './_prompts'
-import { getDidDoc, getKeypairs, loadAccount } from './utils/utils'
+import { getMnemonic, useExisting, getNetwork, status } from './_prompts'
+import { loadAccount } from './utils/loadAccount'
+import { getDidDoc } from './utils/getDidDoc'
+import { getKeypairs } from './utils/getKeypairs'
 import chalk from 'chalk'
 import * as fs from 'fs'
 import mainMenu from './main-menu'
@@ -30,24 +26,21 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
       : mnemonicGenerate()
     : await getMnemonic()
 
-  const origin = await getOrigin()
   await status('connecting to network...')
   await connect(network)
-  const account = await loadAccount(mnemonic)
-  const keypairs = await getKeypairs(account, mnemonic)
-  const didDoc = await getDidDoc(account, keypairs, network)
+  const account = await loadAccount({ seed: mnemonic })
+  const keypairs = await getKeypairs(mnemonic)
+  const didDoc = await getDidDoc({ account, keypairs, network })
   const dotenv = await getEnvironmentVariables(
     network,
     mnemonic,
     account,
-    didDoc,
-    origin
+    didDoc
   )
 
   if (returnAssets) {
     return {
       network,
-      origin,
       mnemonic,
       address: account.address,
       didUri: didDoc.uri,
@@ -69,19 +62,17 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
 }
 
 async function getEnvironmentVariables(
-  network: any,
-  mnemonic: any,
+  network: string,
+  mnemonic: string,
   account: KeyringPair,
-  didDoc: DidDocument,
-  origin: any
-) {
+  didDoc: DidDocument
+): Promise<string> {
   await status('Building environment variables...')
   let dotenv = ''
-  dotenv += `ORIGIN=${origin}\n`
   dotenv += `WSS_ADDRESS=${network}\n`
-  dotenv += `Account_MNEMONIC=${mnemonic}\n`
-  dotenv += `Account_ADDRESS=${account.address}\n`
-  dotenv += `Account_DID_URI=${didDoc.uri}`
+  dotenv += `ACCOUNT_MNEMONIC=${mnemonic}\n`
+  dotenv += `ACCOUNT_ADDRESS=${account.address}\n`
+  dotenv += `ACCOUNT_DID_URI=${didDoc.uri}`
   return dotenv
 }
 

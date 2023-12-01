@@ -15,6 +15,6 @@ export interface Presentation {
 
 export interface Keypairs {
   authentication: KiltKeyringPair
-  assertion: KiltKeyringPair
+  assertionMethod: KiltKeyringPair
   keyAgreement: KiltEncryptionKeypair
 }

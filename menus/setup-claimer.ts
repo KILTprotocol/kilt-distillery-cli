@@ -1,13 +1,11 @@
 import { Claim, connect, Credential } from '@kiltprotocol/sdk-js'
 import { status, getClaimDetails } from './_prompts'
 import mainMenu from './main-menu'
-import {
-  getAllSocialCTypes,
-  attestClaim,
-  loadAccount,
-  getKeypairs,
-  getDidDoc,
-} from './utils/utils'
+import { loadAccount } from './utils/loadAccount'
+import { attestClaim } from './utils/attestClaim'
+import { getAllSocialCTypes } from './utils/getAllSocialCTypes'
+import { getDidDoc } from './utils/getDidDoc'
+import { getKeypairs } from './utils/getKeypairs'
 
 import chalk from 'chalk'
 import * as fs from 'fs'
@@ -31,16 +29,16 @@ export default async function (): Promise<any> {
   await status('connecting to network...')
   await connect('wss://peregrine.kilt.io/parachain-public-ws')
   const mnemonic = mnemonicGenerate()
-  const account = await loadAccount(mnemonic)
-  const keypairs = await getKeypairs(account, mnemonic)
-  const didDoc = await getDidDoc(
+  const account = await loadAccount({ seed: mnemonic })
+  const keypairs = await getKeypairs(mnemonic)
+  const didDoc = await getDidDoc({
     account,
     keypairs,
-    'wss://peregrine.kilt.io/parachain-public-ws'
-  )
+    network: 'wss://peregrine.kilt.io/parachain-public-ws',
+  })
 
   const { githubCType, discordCType, emailCType, twitchCType, twitterCType } =
-    await getAllSocialCTypes(account, keypairs)
+    await getAllSocialCTypes({ account, keypairs })
 
   await status('Generating claimer github claim content...')
   const githubClaimContents = await getClaimDetails(githubCType.properties)
@@ -104,11 +102,11 @@ export default async function (): Promise<any> {
   ]
 
   await status('Self-attesting the claims...')
-  const credentialPresentations = await attestClaim(
+  const credentialPresentations = await attestClaim({
     credentials,
     account,
-    keypairs
-  )
+    keypairs,
+  })
 
   await status('Generating claimer credentials assets...')
   saveAssets(credentialPresentations)

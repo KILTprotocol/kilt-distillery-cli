@@ -1,9 +1,10 @@
 import { getDappName, getRecipeProject, mainMenu, status } from './_prompts'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 import download from 'download-git-repo'
 import exitCli from './exit-cli'
 
-async function downloadRecipe(repository: string, directory: any) {
+async function downloadRecipe(repository: string, directory: string) {
   return new Promise((resolve, reject) => {
     download(repository, directory, (error: any) => {
       if (error) {
@@ -24,6 +25,7 @@ export default async function (): Promise<void> {
   const dappName = await getDappName()
   await status('downloading project files...')
   const result = await downloadRecipe(project.repo, dappName)
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-ignore
   if (!result.ok) {
     await status('error downloading files... press any key to exit', {
