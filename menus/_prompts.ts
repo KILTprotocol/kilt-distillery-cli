@@ -120,24 +120,6 @@ export async function getNetwork() {
   ).network
 }
 
-export async function getOrigin() {
-  return (
-    await prompt({
-      prompt: {
-        type: 'input',
-        name: 'origin',
-        message: `enter origin ${chalk.reset.gray(
-          '(https://example.com || http://localhost:3000)'
-        )}\n${chalk.cyan('❯')}`,
-        validate: (origin) =>
-          origin.startsWith('http://localhost:') ||
-          !!validUrl.isUri(origin) ||
-          'invalid origin',
-      },
-    })
-  ).origin
-}
-
 export async function getRecipeProject() {
   const { project } = await prompt({
     prompt: {

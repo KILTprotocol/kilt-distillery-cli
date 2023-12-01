@@ -1,12 +1,6 @@
 import { connect, DidDocument, KeyringPair } from '@kiltprotocol/sdk-js'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
-import {
-  getMnemonic,
-  useExisting,
-  getNetwork,
-  getOrigin,
-  status,
-} from './_prompts'
+import { getMnemonic, useExisting, getNetwork, status } from './_prompts'
 import { loadAccount } from './utils/loadAccount'
 import { getDidDoc } from './utils/getDidDoc'
 import { getKeypairs } from './utils/getKeypairs'
@@ -32,7 +26,6 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
       : mnemonicGenerate()
     : await getMnemonic()
 
-  const origin = await getOrigin()
   await status('connecting to network...')
   await connect(network)
   const account = await loadAccount({ seed: mnemonic })
@@ -42,8 +35,7 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
     network,
     mnemonic,
     account,
-    didDoc,
-    origin
+    didDoc
   )
 
   if (returnAssets) {
@@ -74,12 +66,10 @@ async function getEnvironmentVariables(
   network: string,
   mnemonic: string,
   account: KeyringPair,
-  didDoc: DidDocument,
-  origin: string
+  didDoc: DidDocument
 ): Promise<string> {
   await status('Building environment variables...')
   let dotenv = ''
-  dotenv += `ORIGIN=${origin}\n`
   dotenv += `WSS_ADDRESS=${network}\n`
   dotenv += `ACCOUNT_MNEMONIC=${mnemonic}\n`
   dotenv += `ACCOUNT_ADDRESS=${account.address}\n`
