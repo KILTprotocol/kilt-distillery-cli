@@ -12,15 +12,13 @@ import setupIdentity from '../setup-identity'
 import { initialiseProject } from '../utils/initialiseProject'
 
 export default async function (dappName: string) {
-  const { network, mnemonic, didUri, origin } = await setupIdentity({
+  const { network, mnemonic, didUri } = await setupIdentity({
     returnAssets: true,
   })
 
   const port = await getBackendPort()
 
   let dotenv = ''
-
-  dotenv += `URL="${origin}"\n`
   dotenv += `PORT="${port}"\n`
   dotenv += `DAPP_NAME="${dappName}"\n`
   dotenv += `BLOCKCHAIN_ENDPOINT=${network}\n`

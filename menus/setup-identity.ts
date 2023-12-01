@@ -41,7 +41,6 @@ export default async function ({ returnAssets = false } = {}): Promise<any> {
   if (returnAssets) {
     return {
       network,
-      origin,
       mnemonic,
       address: account.address,
       didUri: didDoc.uri,
