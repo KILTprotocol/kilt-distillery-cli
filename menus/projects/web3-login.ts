@@ -30,6 +30,12 @@ export default async function (dappName: string) {
   dotenv += `JWT_SIGNER_SECRET=${jwtSecret}\n`
   dotenv += `FRONTEND_PORT=${frontend}\n`
   dotenv += `BACKEND_PORT=${backend}\n`
+  // Setup for Peregrine using Email CType and SocialKYC
+  dotenv +=
+    'CTYPE_HASH=0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac\n'
+  dotenv +=
+    'TRUSTED_ATTESTERS=did:kilt:4pehddkhEanexVTTzWAtrrfo2R7xPnePpuiJLC7shQU894aY\n'
+  dotenv += 'REQUIRED_PROPERTIES=Email'
   const projectPath = `${process.cwd()}/${dappName}`
 
   await status('creating files...')
